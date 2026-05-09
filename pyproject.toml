@@ -1,7 +1,7 @@
 [project]
 name = "zigpeek"
-version = "0.2.0"
-description = "Fast CLI for Zig stdlib + builtin docs lookups (port of the zig-docs MCP server)"
+version = "0.3.0"
+description = "Fast CLI for Zig 0.16 stdlib + Skill for coding agents"
 requires-python = ">=3.12"
 dependencies = [
     "wasmtime>=25.0.0",
