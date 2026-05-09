@@ -1,15 +1,13 @@
 # zigpeek
 
 Fast CLI for Zig 0.16 stdlib + Skill for coding agents. Replaces the
-[`zig-docs` MCP server](https://github.com/loonghao/zig-mcp) where MCP
+[`zig-docs` MCP server](https://github.com/zig-wasm/zig-mcp) where MCP
 isn't available — typically cloud agents.
 
 ## Install
 
 ```sh
-uv tool install zigpeek
-# or
-pipx install zigpeek
+uv tool install zigpeek      # or: pipx install zigpeek
 ```
 
 ## Usage
@@ -27,18 +25,16 @@ get std.ArrayList
 EOF
 ```
 
-## Use as a Claude Code skill
+## Claude Code skill
 
 ```sh
 cp -r skills/zigpeek ~/.claude/skills/
 ```
 
-Assumes `zigpeek` is on `$PATH` (see [Install](#install)). Full
-agent-facing docs live in [`skills/zigpeek/SKILL.md`](skills/zigpeek/SKILL.md).
+See [`skills/zigpeek/SKILL.md`](skills/zigpeek/SKILL.md) for the
+agent-facing usage.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE). Bundled `main.wasm` is also MIT (from
-[`zig-mcp`](https://github.com/loonghao/zig-mcp)); see
-[`vendor/PROVENANCE.md`](vendor/PROVENANCE.md). Internals and contributor
-notes live in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+MIT — see [`LICENSE`](LICENSE) and [`ARCHITECTURE.md`](ARCHITECTURE.md)
+for internals.

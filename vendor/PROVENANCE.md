@@ -12,7 +12,7 @@ directory and are not shipped in the wheel.)
 
 ## Source
 
-Built from the [zig-mcp](https://github.com/loonghao/zig-mcp) project (the
+Built from the [zig-mcp](https://github.com/zig-wasm/zig-mcp) project (the
 upstream of the local `zig-docs` MCP server). The Zig source for this WASM
 lives in `docs/` of that repo (`docs/main.zig`, `docs/Walk.zig`,
 `docs/Decl.zig`, `docs/html_render.zig`, `docs/markdown.zig`).
