@@ -1,7 +1,9 @@
 [project]
 name = "zigpeek"
-version = "0.3.0"
+version = "0.3.1"
 description = "Fast CLI for Zig 0.16 stdlib + Skill for coding agents"
+readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.12"
 dependencies = [
     "wasmtime>=25.0.0",
@@ -9,6 +11,11 @@ dependencies = [
     "beautifulsoup4>=4.12.0",
     "lxml>=5.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/TanGentleman/zigpeek"
+Repository = "https://github.com/TanGentleman/zigpeek"
+Issues = "https://github.com/TanGentleman/zigpeek/issues"
 
 [project.scripts]
 zigpeek = "zigpeek.cli:main"
