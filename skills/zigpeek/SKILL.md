@@ -12,12 +12,12 @@ autodoc WASM module the official Zig docs use, against the same
 
 ## Setup (run once per agent session/sandbox)
 
-Install the `zigpeek` CLI globally with either tool:
+Install with either tool:
 
 ```sh
-pipx install git+https://github.com/TanGentleman/zigpeek
+uv tool install zigpeek
 # or
-uv tool install git+https://github.com/TanGentleman/zigpeek
+pipx install zigpeek
 ```
 
 Then warm the cache so subsequent lookups are offline:
@@ -46,9 +46,6 @@ zigpeek builtins list
 
 # Look up a builtin (by name or keyword)
 zigpeek builtins get atomic
-
-# Pre-populate the cache (so later commands don't need network)
-zigpeek prefetch
 ```
 
 ## When to use which command
@@ -65,10 +62,9 @@ zigpeek prefetch
 
 ## Batching multiple lookups
 
-Each `zigpeek` invocation pays ~1 s of Python+wasmtime startup. If you
-plan more than two lookups, pipe them through `zigpeek batch` to share
-that cost across the whole sequence — the WASM instance and parsed
-sources are reused between commands.
+Each invocation pays ~1 s of Python+wasmtime startup. For more than two
+lookups, use `zigpeek batch` — it reuses the WASM instance and parsed
+sources across commands.
 
 ```sh
 zigpeek batch <<'EOF'
@@ -79,11 +75,10 @@ builtins get atomic
 EOF
 ```
 
-Each command's output is framed with a `===> <command>` separator on its
-own line. Per-line failures (not-found, bad input) are reported inline
-and **do not abort the batch**; the process exit code is the worst code
-seen across all lines (`0` if every command succeeded). `prefetch` and
-nested `batch` are rejected — run them outside.
+Each command's output is framed with a `===> <command>` separator.
+Per-line failures are reported inline and **do not abort the batch**;
+the exit code is the worst across all lines (`0` if all succeeded).
+`prefetch` and nested `batch` are rejected — run them outside.
 
 Use `zigpeek batch -f commands.txt` to read from a file instead of
 stdin. Blank lines and lines starting with `#` are ignored.
@@ -149,8 +144,8 @@ the read path uses it automatically and prefetch becomes a no-op.
 
 ## Troubleshooting
 
-- **`zigpeek: command not found`** — install via `pipx install git+https://github.com/TanGentleman/zigpeek`
-  (or `uv tool install ...`). If neither tool is available, install uv:
+- **`zigpeek: command not found`** — install via `uv tool install zigpeek`
+  (or `pipx install zigpeek`). If neither tool is available, install uv:
   `curl -LsSf https://astral.sh/uv/install.sh | sh`.
 - **`network/cache error`** — `ziglang.org` is blocked or unreachable.
   Run `zigpeek prefetch` from a network-enabled host first, or check
