@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h2 id="Builtin-Functions"><a>Builtin Functions</a></h2>
+
+    <h3 id="addWithOverflow"><a>@addWithOverflow</a></h3>
+    <pre>@addWithOverflow(a: anytype, b: anytype) struct { anytype, u1 }</pre>
+    <p>Performs <code>a + b</code> and returns the result with an
+       <a href="#overflow">overflow</a> bit.</p>
+    <ul>
+      <li>The first element is the wrapped result.</li>
+      <li>The second element is the carry bit.</li>
+    </ul>
+
+    <h3 id="atomicLoad"><a>@atomicLoad</a></h3>
+    <pre>@atomicLoad(comptime T: type, ptr: *const T, comptime ordering: AtomicOrder) T</pre>
+    <p>This builtin function atomically dereferences <code>ptr</code>.</p>
+
+    <h2 id="OtherSection">Other</h2>
+    <h3 id="ignored"><a>@ignored</a></h3>
+    <pre>@ignored()</pre>
+  </body>
+</html>

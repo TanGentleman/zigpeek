@@ -1,0 +1,13 @@
+diff --git a/docs/Walk.zig b/docs/Walk.zig
+index 3865274..fef2fa6 100644
+--- a/docs/Walk.zig
++++ b/docs/Walk.zig
+@@ -791,8 +791,6 @@ fn expr(w: *Walk, scope: *Scope, parent_decl: Decl.Index, node: Ast.Node.Index)
+             try expr(w, scope, parent_decl, full.ast.template);
+         },
+ 
+-        .asm_legacy => {},
+-
+         .builtin_call_two,
+         .builtin_call_two_comma,
+         .builtin_call,
