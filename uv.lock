@@ -5,7 +5,7 @@ requires-python = ">=3.12"
 [manifest]
 members = [
     "zigpeek",
-    "zigpeek-offline-data",
+    "zigpeek-offline",
 ]
 
 [[package]]
@@ -280,13 +280,13 @@ dependencies = [
 
 [package.optional-dependencies]
 offline = [
-    { name = "zigpeek-offline-data" },
+    { name = "zigpeek-offline" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
-    { name = "zigpeek-offline-data" },
+    { name = "zigpeek-offline" },
 ]
 
 [package.metadata]
@@ -295,17 +295,17 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "lxml", specifier = ">=5.0.0" },
     { name = "wasmtime", specifier = ">=25.0.0" },
-    { name = "zigpeek-offline-data", marker = "extra == 'offline'", editable = "packages/zigpeek-offline-data" },
+    { name = "zigpeek-offline", marker = "extra == 'offline'", editable = "packages/zigpeek-offline" },
 ]
 provides-extras = ["offline"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "pytest", specifier = ">=8.0.0" },
-    { name = "zigpeek-offline-data", editable = "packages/zigpeek-offline-data" },
+    { name = "zigpeek-offline", editable = "packages/zigpeek-offline" },
 ]
 
 [[package]]
-name = "zigpeek-offline-data"
+name = "zigpeek-offline"
 version = "0.4.0"
-source = { editable = "packages/zigpeek-offline-data" }
+source = { editable = "packages/zigpeek-offline" }

@@ -1,5 +1,5 @@
 [project]
-name = "zigpeek-offline-data"
+name = "zigpeek-offline"
 version = "0.4.0"
 description = "Prefetched Zig 0.16 stdlib + langref bundle for zigpeek's offline extra"
 readme = "README.md"
@@ -15,7 +15,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/zigpeek_offline_data"]
+packages = ["src/zigpeek_offline"]
 
 # Custom build hook downloads sources.tar + langref.html for the pinned Zig
 # version and stages them inside the package before the wheel is assembled.

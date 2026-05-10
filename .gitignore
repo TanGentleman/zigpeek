@@ -5,6 +5,6 @@ __pycache__/
 .DS_Store
 
 # Auto-downloaded by packages/zigpeek-offline-data/hatch_build.py at build time
-packages/zigpeek-offline-data/src/zigpeek_offline_data/[0-9]*/
+packages/zigpeek-offline/src/zigpeek_offline/[0-9]*/
 
 dist/

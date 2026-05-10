@@ -1,6 +1,6 @@
 """Hatch build hook: download Zig docs into the wheel staging dir.
 
-Runs once per ``uv build`` for ``zigpeek-offline-data``. Stdlib-only — the
+Runs once per ``uv build`` for ``zigpeek-offline``. Stdlib-only — the
 data wheel must not pull httpx in just to build itself.
 """
 
@@ -29,7 +29,7 @@ class CustomBuildHook(BuildHookInterface):
         target = (
             Path(self.root)
             / "src"
-            / "zigpeek_offline_data"
+            / "zigpeek_offline"
             / ZIG_VERSION
         )
         target.mkdir(parents=True, exist_ok=True)

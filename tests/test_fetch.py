@@ -104,7 +104,7 @@ def test_bundled_path_resolves_under_package(monkeypatch):
     real_files = fetch_mod.files
 
     def fake_files(pkg: str):
-        if pkg == "zigpeek_offline_data":
+        if pkg == "zigpeek_offline":
             raise ModuleNotFoundError(pkg)
         return real_files(pkg)
 
@@ -115,7 +115,7 @@ def test_bundled_path_resolves_under_package(monkeypatch):
 
 
 def test_bundled_path_prefers_companion_package(tmp_path, monkeypatch):
-    """If zigpeek_offline_data ships the file, bundled_path_for returns it."""
+    """If zigpeek_offline ships the file, bundled_path_for returns it."""
     import zigpeek.fetch as fetch_mod
 
     companion_root = tmp_path / "companion"
@@ -125,7 +125,7 @@ def test_bundled_path_prefers_companion_package(tmp_path, monkeypatch):
     real_files = fetch_mod.files
 
     def fake_files(pkg: str):
-        if pkg == "zigpeek_offline_data":
+        if pkg == "zigpeek_offline":
             return companion_root
         return real_files(pkg)
 
@@ -147,7 +147,7 @@ def test_bundled_path_falls_back_when_companion_missing_version(
     real_files = fetch_mod.files
 
     def fake_files(pkg: str):
-        if pkg == "zigpeek_offline_data":
+        if pkg == "zigpeek_offline":
             return companion_root
         return real_files(pkg)
 

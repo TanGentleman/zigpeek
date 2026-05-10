@@ -147,8 +147,8 @@ def test_search_empty_query_returns_exit_1(tmp_path):
 
 
 def test_search_with_corrupt_sources_tar_exits_2(tmp_path):
-    # Use a version the companion `zigpeek-offline-data` package doesn't
-    # bundle so the corrupt cache is what the CLI reaches for.
+    # Use a version the `zigpeek-offline` package doesn't bundle so
+    # the corrupt cache is what the CLI reaches for.
     fake_version = "0.0.0-corrupt-test"
     cached = tmp_path / fake_version / "sources.tar"
     cached.parent.mkdir(parents=True)
