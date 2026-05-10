@@ -10,6 +10,10 @@ autodoc WASM module the official Zig docs use, against the same
 `sources.tar` from `ziglang.org`. Output is markdown, byte-equivalent
 (modulo whitespace) to what the MCP returns.
 
+If the project is on Zig 0.15.x, also load the `zig-0.15-to-0.16` skill —
+it captures the high-leverage migration rows so you spend lookups on
+edge cases, not on the obvious ones.
+
 ## Setup (run once per agent session/sandbox)
 
 Install with either tool:
