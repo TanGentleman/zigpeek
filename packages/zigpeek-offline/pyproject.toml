@@ -4,7 +4,7 @@ version = "0.4.0"
 description = "Prefetched Zig 0.16 stdlib + langref bundle for zigpeek's offline extra"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 # Pure data shim: no runtime deps. The build hook below uses the stdlib only.
 
 [project.urls]
