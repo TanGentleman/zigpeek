@@ -147,11 +147,19 @@ def test_search_empty_query_returns_exit_1(tmp_path):
 
 
 def test_search_with_corrupt_sources_tar_exits_2(tmp_path):
-    cached = tmp_path / "0.16.0" / "sources.tar"
+    # Use a version the `zigpeek-offline` package doesn't bundle so
+    # the corrupt cache is what the CLI reaches for.
+    fake_version = "0.0.0-corrupt-test"
+    cached = tmp_path / fake_version / "sources.tar"
     cached.parent.mkdir(parents=True)
     cached.write_bytes(b"NOT-A-TAR")
     proc = run_cli(
-        "search", "ArrayList", env={"ZIGPEEK_CACHE_DIR": str(tmp_path)}
+        "search",
+        "ArrayList",
+        env={
+            "ZIGPEEK_CACHE_DIR": str(tmp_path),
+            "ZIGPEEK_VERSION": fake_version,
+        },
     )
     assert proc.returncode == 2
     assert "data error" in proc.stderr

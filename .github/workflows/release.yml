@@ -16,14 +16,36 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Build sdist + wheel
-        run: uv build
-
-      - name: Verify wheel ships main.wasm
+      - name: Verify pyproject versions match the tag
         run: |
           set -euo pipefail
-          wheel=$(ls dist/zigpeek-*.whl)
-          python -m zipfile -l "$wheel" | grep -q "_vendor/main.wasm"
+          tag="${GITHUB_REF_NAME#v}"
+          for f in pyproject.toml packages/zigpeek-offline/pyproject.toml; do
+            v=$(grep -m1 -E '^version = ' "$f" | sed -E 's/.*"(.*)"/\1/')
+            if [[ "$v" != "$tag" ]]; then
+              echo "::error file=$f::version $v does not match tag $tag"
+              exit 1
+            fi
+          done
+          pin=$(grep -m1 -E 'zigpeek-offline==' pyproject.toml | sed -E 's/.*==([0-9][^"]*)".*/\1/')
+          if [[ "$pin" != "$tag" ]]; then
+            echo "::error file=pyproject.toml::offline pin $pin does not match tag $tag"
+            exit 1
+          fi
+
+      - name: Build both wheels
+        run: |
+          uv build
+          uv build --package zigpeek-offline
+
+      - name: Verify wheels ship expected files
+        run: |
+          set -euo pipefail
+          main=$(ls dist/zigpeek-*.whl | grep -v offline)
+          off=$(ls dist/zigpeek_offline-*.whl)
+          python -m zipfile -l "$main" | grep -q "_vendor/main.wasm"
+          python -m zipfile -l "$off"  | grep -q "zigpeek_offline/.*/sources.tar"
+          python -m zipfile -l "$off"  | grep -q "zigpeek_offline/.*/langref.html"
 
       - uses: actions/upload-artifact@v4
         with:
