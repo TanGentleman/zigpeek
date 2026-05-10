@@ -7,14 +7,14 @@ isn't available — typically cloud agents.
 ## Install
 
 ```sh
-uv tool install zigpeek                # or: pipx install zigpeek
-uv tool install 'zigpeek[offline]'     # ships prefetched docs; no network at first run
+uv tool install 'zigpeek[offline]'     # bundles Zig 0.16.0 docs; no network needed
 ```
+
+For other Zig versions, see [`OTHER-ZIG-VERSIONS.md`](OTHER-ZIG-VERSIONS.md).
 
 ## Usage
 
 ```sh
-zigpeek prefetch                                 # warm cache (once per session)
 zigpeek search ArrayList --limit 10              # fuzzy stdlib search
 zigpeek get std.ArrayList                        # full docs for an FQN
 zigpeek get std.ArrayList --source-file          # source file containing it
