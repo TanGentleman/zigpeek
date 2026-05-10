@@ -376,7 +376,7 @@ wheels = [
 
 [[package]]
 name = "zigpeek"
-version = "0.4.0"
+version = "0.4.1"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
@@ -414,5 +414,5 @@ dev = [
 
 [[package]]
 name = "zigpeek-offline"
-version = "0.4.0"
+version = "0.4.1"
 source = { editable = "packages/zigpeek-offline" }
