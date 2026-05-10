@@ -2,6 +2,12 @@ version = 1
 revision = 3
 requires-python = ">=3.12"
 
+[manifest]
+members = [
+    "zigpeek",
+    "zigpeek-offline-data",
+]
+
 [[package]]
 name = "anyio"
 version = "4.13.0"
@@ -263,7 +269,7 @@ wheels = [
 
 [[package]]
 name = "zigpeek"
-version = "0.2.0"
+version = "0.4.0"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
@@ -272,9 +278,15 @@ dependencies = [
     { name = "wasmtime" },
 ]
 
+[package.optional-dependencies]
+offline = [
+    { name = "zigpeek-offline-data" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
+    { name = "zigpeek-offline-data" },
 ]
 
 [package.metadata]
@@ -283,7 +295,17 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "lxml", specifier = ">=5.0.0" },
     { name = "wasmtime", specifier = ">=25.0.0" },
+    { name = "zigpeek-offline-data", marker = "extra == 'offline'", editable = "packages/zigpeek-offline-data" },
 ]
+provides-extras = ["offline"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.0.0" }]
+dev = [
+    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "zigpeek-offline-data", editable = "packages/zigpeek-offline-data" },
+]
+
+[[package]]
+name = "zigpeek-offline-data"
+version = "0.4.0"
+source = { editable = "packages/zigpeek-offline-data" }

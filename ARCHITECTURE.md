@@ -11,7 +11,23 @@
 | `src/zigpeek/_vendor/main.wasm`   | autodoc WASM, shipped inside the package            |
 | `vendor/PROVENANCE.md`            | build instructions + SHA256 + upstream commit       |
 | `vendor/patches/`                 | local patches applied before rebuilding the WASM    |
+| `packages/zigpeek-offline-data/`  | companion data wheel for the `[offline]` extra      |
 | `skills/zigpeek/SKILL.md`         | skill metadata for Claude Code                      |
+
+## The `[offline]` extra
+
+`uv tool install 'zigpeek[offline]'` pulls in the sibling
+`zigpeek-offline-data` wheel, which ships a prefetched
+`sources.tar` + `langref.html` for `DEFAULT_ZIG_VERSION`. At runtime
+`fetch.bundled_path_for` checks that companion package first, so first
+use needs no network. Other Zig versions still fetch on demand.
+
+The data wheel is a uv workspace member built by a custom hatch hook
+(`packages/zigpeek-offline-data/hatch_build.py`) that downloads the
+files at wheel-build time — no manual prefetch step. Bump `ZIG_VERSION`
+in the hook in lockstep with `src/zigpeek/version.py`, and the version
+pin in the main `pyproject.toml`'s `[project.optional-dependencies]`,
+when releasing.
 
 ## Why a port and not a wrapper?
 

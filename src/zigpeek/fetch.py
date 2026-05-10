@@ -25,7 +25,19 @@ def cache_dir_for(zig_version: str, override: Path | str | None = None) -> Path:
 
 
 def bundled_path_for(zig_version: str, filename: str) -> Path:
-    """Where a pre-bundled snapshot would live for a given version."""
+    """Where a pre-bundled snapshot would live for a given version.
+
+    Resolves to the ``zigpeek-offline-data`` companion package when
+    installed (i.e. ``zigpeek[offline]``). Falls back to an in-package
+    ``_data`` directory used by manual snapshot drops.
+    """
+    try:
+        companion = files("zigpeek_offline_data").joinpath(zig_version, filename)
+        p = Path(str(companion))
+        if p.is_file():
+            return p
+    except (ModuleNotFoundError, FileNotFoundError):
+        pass
     return Path(str(files("zigpeek").joinpath("_data", zig_version, filename)))
 
 

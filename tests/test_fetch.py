@@ -37,6 +37,9 @@ def test_cache_dir_override_beats_env(tmp_path, monkeypatch):
 
 def test_fetch_sources_uses_cache_when_present(tmp_path, monkeypatch):
     monkeypatch.setenv("ZIGPEEK_CACHE_DIR", str(tmp_path))
+    monkeypatch.setattr(
+        "zigpeek.fetch.bundled_path_for", _bundled_in(tmp_path / "no-bundle")
+    )
     cached = tmp_path / "0.16.0" / "sources.tar"
     cached.parent.mkdir(parents=True)
     cached.write_bytes(b"PRE-CACHED")
@@ -45,7 +48,10 @@ def test_fetch_sources_uses_cache_when_present(tmp_path, monkeypatch):
     assert data == b"PRE-CACHED"
 
 
-def test_fetch_sources_uses_cache_dir_kwarg(tmp_path):
+def test_fetch_sources_uses_cache_dir_kwarg(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "zigpeek.fetch.bundled_path_for", _bundled_in(tmp_path / "no-bundle")
+    )
     cached = tmp_path / "0.16.0" / "sources.tar"
     cached.parent.mkdir(parents=True)
     cached.write_bytes(b"VIA-KWARG")
@@ -75,6 +81,9 @@ def test_fetch_sources_refresh_overwrites_cache(tmp_path, monkeypatch):
 
 def test_fetch_langref_caches_text(tmp_path, monkeypatch):
     monkeypatch.setenv("ZIGPEEK_CACHE_DIR", str(tmp_path))
+    monkeypatch.setattr(
+        "zigpeek.fetch.bundled_path_for", _bundled_in(tmp_path / "no-bundle")
+    )
 
     def fake_get(url: str) -> bytes:
         return b"<html>hello</html>"
@@ -88,10 +97,63 @@ def test_fetch_langref_caches_text(tmp_path, monkeypatch):
     )
 
 
-def test_bundled_path_resolves_under_package():
+def test_bundled_path_resolves_under_package(monkeypatch):
+    # When the companion package is absent, fall back to in-package _data.
+    import zigpeek.fetch as fetch_mod
+
+    real_files = fetch_mod.files
+
+    def fake_files(pkg: str):
+        if pkg == "zigpeek_offline_data":
+            raise ModuleNotFoundError(pkg)
+        return real_files(pkg)
+
+    monkeypatch.setattr(fetch_mod, "files", fake_files)
     p = bundled_path_for("0.16.0", "sources.tar")
     assert p.parts[-3:] == ("_data", "0.16.0", "sources.tar")
     assert "zigpeek" in p.parts
+
+
+def test_bundled_path_prefers_companion_package(tmp_path, monkeypatch):
+    """If zigpeek_offline_data ships the file, bundled_path_for returns it."""
+    import zigpeek.fetch as fetch_mod
+
+    companion_root = tmp_path / "companion"
+    (companion_root / "0.16.0").mkdir(parents=True)
+    (companion_root / "0.16.0" / "sources.tar").write_bytes(b"FROM-COMPANION")
+
+    real_files = fetch_mod.files
+
+    def fake_files(pkg: str):
+        if pkg == "zigpeek_offline_data":
+            return companion_root
+        return real_files(pkg)
+
+    monkeypatch.setattr(fetch_mod, "files", fake_files)
+    p = bundled_path_for("0.16.0", "sources.tar")
+    assert p == companion_root / "0.16.0" / "sources.tar"
+    assert p.read_bytes() == b"FROM-COMPANION"
+
+
+def test_bundled_path_falls_back_when_companion_missing_version(
+    tmp_path, monkeypatch
+):
+    """Companion installed but doesn't ship the requested version → fall back."""
+    import zigpeek.fetch as fetch_mod
+
+    companion_root = tmp_path / "companion"
+    companion_root.mkdir()  # no version subdirs
+
+    real_files = fetch_mod.files
+
+    def fake_files(pkg: str):
+        if pkg == "zigpeek_offline_data":
+            return companion_root
+        return real_files(pkg)
+
+    monkeypatch.setattr(fetch_mod, "files", fake_files)
+    p = bundled_path_for("0.99.0", "sources.tar")
+    assert p.parts[-3:] == ("_data", "0.99.0", "sources.tar")
 
 
 def _bundled_in(root: Path):

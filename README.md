@@ -7,7 +7,8 @@ isn't available — typically cloud agents.
 ## Install
 
 ```sh
-uv tool install zigpeek      # or: pipx install zigpeek
+uv tool install zigpeek                # or: pipx install zigpeek
+uv tool install 'zigpeek[offline]'     # ships prefetched docs; no network at first run
 ```
 
 ## Usage
