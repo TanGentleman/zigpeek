@@ -1,7 +1,5 @@
-"""Port of mcp/extract-builtin-functions.ts and the ranking from mcp/tools.ts.
-
-Parses Zig's langref HTML into a list of BuiltinFunction records, then ranks
-those records by relevance to a query string.
+"""Parses Zig's langref HTML into a list of BuiltinFunction records, then
+ranks those records by relevance to a query string.
 """
 
 import re

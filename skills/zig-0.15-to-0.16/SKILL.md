@@ -1,6 +1,6 @@
 ---
 name: zig-0.15-to-0.16
-description: Port Zig code from 0.15.x to 0.16.0. Use when upgrading a Zig project, when a project pins to 0.15.1/0.15.2, or when reviewing code with pre-0.16 idioms (`std.fs.cwd()`, `file.close()` with no arg, `pub fn main() !void` doing I/O, `GeneralPurposeAllocator`, `std.Thread.Pool`, `std.io.fixedBufferStream`, `@Type(...)`). Pairs with the `zigpeek` CLI (or `zig-docs` MCP) to verify each migration's signature against the real 0.16 stdlib.
+description: Port Zig code from 0.15.x to 0.16.0. Use when upgrading a Zig project, when a project pins to 0.15.1/0.15.2, or when reviewing code with pre-0.16 idioms (`std.fs.cwd()`, `file.close()` with no arg, `pub fn main() !void` doing I/O, `GeneralPurposeAllocator`, `std.Thread.Pool`, `std.io.fixedBufferStream`, `@Type(...)`). Pairs with the `zigpeek` CLI to verify each migration's signature against the real 0.16 stdlib.
 ---
 
 # Zig 0.15.x → 0.16.0
@@ -15,7 +15,6 @@ This skill is intentionally non-exhaustive. **Add rows as you hit them** — see
 2. Fix `main` first: adopt `std.process.Init` so you have an `io`.
 3. Thread `io: std.Io` (and `gpa: Allocator`) through the call graph.
 4. Walk the table below. For anything not listed, run `zigpeek get <fqn>` (cold ~1 s; use `zigpeek batch` for ≥3 lookups) before guessing.
-5. If using `zig-docs` MCP, prefer it — same data, no startup cost.
 
 ## main + Io plumbing
 

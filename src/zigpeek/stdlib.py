@@ -1,7 +1,7 @@
-"""Markdown rendering — port of ~/Documents/GitHub/zig-mcp/mcp/std.ts.
+"""Markdown rendering against the autodoc WASM exports.
 
-Each function below mirrors a renderer in std.ts. Smoke tests catch
-structural drift; cosmetic whitespace differences are acceptable.
+Smoke tests catch structural drift; cosmetic whitespace differences are
+acceptable.
 """
 
 from zigpeek.wasm import WasmStd
