@@ -12,14 +12,13 @@ directory and are not shipped in the wheel.)
 
 ## Source
 
-Built from the [zig-mcp](https://github.com/zig-wasm/zig-mcp) project (the
-upstream of the local `zig-docs` MCP server). The Zig source for this WASM
-lives in `docs/` of that repo (`docs/main.zig`, `docs/Walk.zig`,
-`docs/Decl.zig`, `docs/html_render.zig`, `docs/markdown.zig`).
+Built from the [zig-wasm/zig-mcp](https://github.com/zig-wasm/zig-mcp)
+project. The Zig source for this WASM lives in `docs/` of that repo
+(`docs/main.zig`, `docs/Walk.zig`, `docs/Decl.zig`, `docs/html_render.zig`,
+`docs/markdown.zig`).
 
 - **Upstream commit:** `d804f936f9d6279b17e4c6d3dfcebb26a0c1ac2a`
 - **Local patches:** `patches/walk-drop-asm-legacy.patch`
-- **Build host checkout:** `~/Documents/GitHub/zig-mcp`
 
 ### Why a patch?
 
@@ -33,8 +32,8 @@ semantically equivalent for any AST a 0.16.0 compiler can produce.
 ## Rebuild
 
 ```bash
-cd ~/Documents/GitHub/zig-mcp
-git fetch origin && git checkout <new-sha>
+git clone https://github.com/zig-wasm/zig-mcp && cd zig-mcp
+git checkout <new-sha>
 git apply <repo>/vendor/patches/walk-drop-asm-legacy.patch
 zig build                                    # produces zig-out/main.wasm
 cp zig-out/main.wasm <repo>/src/zigpeek/_vendor/main.wasm
@@ -43,8 +42,8 @@ shasum -a 256 <repo>/src/zigpeek/_vendor/main.wasm
 # changed Walk.zig
 ```
 
-If a future zig-mcp commit drops the `asm_legacy` arm upstream, delete the
-patch and skip the `git apply` step.
+If a future upstream commit drops the `asm_legacy` arm, delete the patch
+and skip the `git apply` step.
 
 ## Why vendored?
 

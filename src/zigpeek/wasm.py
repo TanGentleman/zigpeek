@@ -31,7 +31,6 @@ def split_packed(packed: int) -> tuple[int, int]:
 class WasmStd:
     """Drive the autodoc WASM module loaded from sources.tar.
 
-    Mirrors the JS interface in ~/Documents/GitHub/zig-mcp/mcp/std.ts.
     The WASM imports a single js.log function (level, ptr, len) — we
     forward errors as exceptions and discard the rest.
     """

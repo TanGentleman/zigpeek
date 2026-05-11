@@ -1,8 +1,6 @@
 # zigpeek
 
-Fast CLI for Zig 0.16 stdlib + Skill for coding agents. Replaces the
-[`zig-docs` MCP server](https://github.com/zig-wasm/zig-mcp) where MCP
-isn't available — typically cloud agents.
+Fast CLI for Zig 0.16 stdlib + Skill for coding agents.
 
 ## Install
 
@@ -39,3 +37,9 @@ agent-facing usage.
 
 MIT — see [`LICENSE`](LICENSE) and [`ARCHITECTURE.md`](ARCHITECTURE.md)
 for internals.
+
+## Credits
+
+The vendored autodoc WASM is built from
+[`zig-wasm/zig-mcp`](https://github.com/zig-wasm/zig-mcp); see
+[`vendor/PROVENANCE.md`](vendor/PROVENANCE.md).

@@ -1,11 +1,11 @@
 ---
 name: zigpeek
-description: Look up Zig 0.16 standard library APIs and builtin functions via a local CLI (replaces the zig-docs MCP server in environments without MCP support, e.g. cloud agents). Use before writing or reviewing Zig code that touches stdlib — critical for std.Io filesystem APIs (std.Io.Dir, std.Io.File), Reader/Writer interfaces, and std.process.Init. Triggers when answering "how do I X in Zig" or writing Zig that touches files, dirs, env, or process state. If the zig-docs MCP server is already connected, prefer it over this CLI.
+description: Look up Zig 0.16 standard library APIs and builtin functions via a local CLI. Use before writing or reviewing Zig code that touches stdlib — critical for std.Io filesystem APIs (std.Io.Dir, std.Io.File), Reader/Writer interfaces, and std.process.Init. Triggers when answering "how do I X in Zig" or writing Zig that touches files, dirs, env, or process state.
 ---
 
 # zigpeek
 
-A Python+wasmtime port of the four `zig-docs` MCP tools. Loads the same autodoc WASM module the official Zig docs use, against the same `sources.tar` from `ziglang.org`. Output is markdown, byte-equivalent (modulo whitespace) to what the MCP returns.
+A Python+wasmtime CLI that drives the same autodoc WASM module the official Zig docs use, against the same `sources.tar` from `ziglang.org`. Output is markdown.
 
 ## Setup (run once per agent session/sandbox)
 

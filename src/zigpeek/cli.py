@@ -1,4 +1,4 @@
-"""argparse entrypoint for `zigpeek`. Five subcommands matching the MCP tools
+"""argparse entrypoint for `zigpeek`. Five stdlib/builtin lookup subcommands
 plus a `prefetch` helper for offline-first workflows and a `batch` runner
 that amortizes Python+wasmtime startup across many lookups.
 
