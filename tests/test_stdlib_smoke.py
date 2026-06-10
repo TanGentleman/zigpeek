@@ -4,6 +4,7 @@ import pytest
 
 from zigpeek.fetch import fetch_sources_tar
 from zigpeek.stdlib import render_get_item, render_search
+from zigpeek.version import DEFAULT_ZIG_VERSION
 from zigpeek.wasm import WasmStd
 
 SMOKE = pytest.mark.skipif(
@@ -14,7 +15,7 @@ SMOKE = pytest.mark.skipif(
 
 @pytest.fixture
 def std(vendor_wasm_path):
-    sources = fetch_sources_tar("0.16.0")
+    sources = fetch_sources_tar(DEFAULT_ZIG_VERSION)
     return WasmStd(vendor_wasm_path.read_bytes(), sources)
 
 

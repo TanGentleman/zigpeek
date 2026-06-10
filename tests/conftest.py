@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 TESTS_DIR = Path(__file__).resolve().parent
-VENDOR_WASM = TESTS_DIR.parent / "vendor" / "main.wasm"
+VENDOR_WASM = TESTS_DIR.parent / "src" / "zigpeek" / "_vendor" / "main.wasm"
 FIXTURES_DIR = TESTS_DIR / "fixtures"
 
 

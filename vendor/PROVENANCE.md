@@ -9,6 +9,9 @@ directory and are not shipped in the wheel.)
 **SHA256:** `a74b841e43de24a77f49a180b3148e6ea5f51ef3af83ecc846da8257cc4605b5`
 **Built on:** 2026-05-03
 **Built with Zig:** 0.16.0 (released)
+**Compatibility:** verified against `master` sources (0.17.0-dev.813) on
+2026-06-10 — `get`, `search`, and `builtins` all render. Re-verify with the
+smoke tests after Zig master moves; rebuild if the parser starts failing.
 
 ## Source
 

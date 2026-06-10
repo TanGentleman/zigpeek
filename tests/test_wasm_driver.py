@@ -3,6 +3,7 @@ import os
 import pytest
 
 from zigpeek.fetch import fetch_sources_tar
+from zigpeek.version import DEFAULT_ZIG_VERSION
 from zigpeek.wasm import WasmStd
 
 SMOKE = pytest.mark.skipif(
@@ -13,7 +14,7 @@ SMOKE = pytest.mark.skipif(
 
 @SMOKE
 def test_wasmstd_loads_and_lists_modules(vendor_wasm_path):
-    sources = fetch_sources_tar("0.16.0")
+    sources = fetch_sources_tar(DEFAULT_ZIG_VERSION)
     std = WasmStd(vendor_wasm_path.read_bytes(), sources)
     modules = std.list_modules()
     assert "std" in modules
@@ -21,7 +22,7 @@ def test_wasmstd_loads_and_lists_modules(vendor_wasm_path):
 
 @SMOKE
 def test_find_decl_for_known_fqn(vendor_wasm_path):
-    sources = fetch_sources_tar("0.16.0")
+    sources = fetch_sources_tar(DEFAULT_ZIG_VERSION)
     std = WasmStd(vendor_wasm_path.read_bytes(), sources)
     idx = std.find_decl("std.ArrayList")
     assert idx is not None
@@ -30,7 +31,7 @@ def test_find_decl_for_known_fqn(vendor_wasm_path):
 
 @SMOKE
 def test_query_returns_results_for_arraylist(vendor_wasm_path):
-    sources = fetch_sources_tar("0.16.0")
+    sources = fetch_sources_tar(DEFAULT_ZIG_VERSION)
     std = WasmStd(vendor_wasm_path.read_bytes(), sources)
     hits = std.execute_query("ArrayList", ignore_case=False)
     assert len(hits) > 0

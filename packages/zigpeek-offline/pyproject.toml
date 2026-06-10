@@ -1,7 +1,7 @@
 [project]
 name = "zigpeek-offline"
 version = "0.4.1"
-description = "Prefetched Zig 0.16 stdlib + langref bundle for zigpeek's offline extra"
+description = "Prefetched Zig 0.17-dev (master) stdlib + langref bundle for zigpeek's offline extra"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"

@@ -30,7 +30,7 @@ from zigpeek.fetch import (
     prefetch as fetch_prefetch,
 )
 from zigpeek.stdlib import render_get_item, render_search
-from zigpeek.version import resolve_version
+from zigpeek.version import DEFAULT_ZIG_VERSION, resolve_version
 from zigpeek.wasm import WasmStd
 
 _BATCH_DISALLOWED = frozenset({"batch", "prefetch"})
@@ -236,7 +236,11 @@ def _cmd_batch(args: argparse.Namespace) -> int:
 
 
 def _add_common(p: argparse.ArgumentParser) -> None:
-    p.add_argument("--version", default=None, help="Zig version (default: 0.16.0)")
+    p.add_argument(
+        "--version",
+        default=None,
+        help=f"Zig version (default: {DEFAULT_ZIG_VERSION})",
+    )
     p.add_argument(
         "--refresh",
         action="store_true",
@@ -253,7 +257,9 @@ def _add_common(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="zigpeek", description="Zig 0.16 docs CLI")
+    parser = argparse.ArgumentParser(
+        prog="zigpeek", description="Zig 0.17-dev (master) docs CLI"
+    )
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_search = sub.add_parser("search", help="Search the standard library")

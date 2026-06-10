@@ -22,6 +22,12 @@ data wheel, which ships a prefetched `sources.tar` + `langref.html` for
 package first, so first use needs no network. Other Zig versions still
 fetch on demand.
 
+`DEFAULT_ZIG_VERSION` is currently `master` (0.17-dev), so the bundle —
+and the `/tmp` cache — are snapshots of whatever master docs were
+current when fetched; neither self-invalidates as upstream moves. Users
+advance them with `zigpeek prefetch --refresh`, and each `[offline]`
+release re-snapshots at wheel-build time.
+
 The data wheel is a uv workspace member built by a custom hatch hook
 (`packages/zigpeek-offline/hatch_build.py`) that downloads the files at
 wheel-build time — no manual prefetch step.

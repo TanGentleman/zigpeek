@@ -1,6 +1,6 @@
 ---
 name: zigpeek
-description: Look up Zig 0.16 standard library APIs and builtin functions via a local CLI. Use before writing or reviewing Zig code that touches stdlib — critical for std.Io filesystem APIs (std.Io.Dir, std.Io.File), Reader/Writer interfaces, and std.process.Init. Triggers when answering "how do I X in Zig" or writing Zig that touches files, dirs, env, or process state.
+description: Look up Zig 0.17-dev (master) standard library APIs and builtin functions via a local CLI. Use before writing or reviewing Zig code that touches stdlib — critical for std.Io filesystem APIs (std.Io.Dir, std.Io.File), Reader/Writer interfaces, and std.process.Init. Triggers when answering "how do I X in Zig" or writing Zig that touches files, dirs, env, or process state.
 ---
 
 # zigpeek
@@ -80,11 +80,11 @@ If `search` only surfaces a re-export and `get` 404s on the inner type, re-run `
 
 ## Version override
 
-Defaults to Zig `0.16.0`. Override with:
+Defaults to Zig `master` (0.17-dev). Override with:
 
 ```sh
-zigpeek search ArrayList --version 0.15.1
-ZIGPEEK_VERSION=master zigpeek search ArrayList
+zigpeek search ArrayList --version 0.16.0
+ZIGPEEK_VERSION=0.15.1 zigpeek search ArrayList
 ```
 
 ## Exit codes

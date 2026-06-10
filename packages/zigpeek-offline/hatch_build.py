@@ -11,8 +11,9 @@ from pathlib import Path
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
-# Keep in lockstep with zigpeek's DEFAULT_ZIG_VERSION.
-ZIG_VERSION = "0.16.0"
+# Keep in lockstep with zigpeek's DEFAULT_ZIG_VERSION. "master" means each
+# wheel build snapshots the 0.17-dev docs current at build time.
+ZIG_VERSION = "master"
 
 _SOURCES = (
     "sources.tar",

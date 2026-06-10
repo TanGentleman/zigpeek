@@ -1,14 +1,16 @@
 # zigpeek
 
-Fast CLI for Zig 0.16 stdlib + Skill for coding agents.
+Fast CLI for Zig 0.17-dev (master) stdlib + Skill for coding agents.
 
 ## Install
 
 ```sh
-uv tool install 'zigpeek[offline]'     # bundles Zig 0.16.0 docs; no network needed
+uv tool install 'zigpeek[offline]'     # bundles Zig master docs; no network needed
 ```
 
-For other Zig versions, see [`OTHER-ZIG-VERSIONS.md`](OTHER-ZIG-VERSIONS.md).
+The offline bundle is a snapshot of the master docs taken when the wheel
+was built; `zigpeek prefetch --refresh` pulls the latest. For released
+Zig versions, see [`OTHER-ZIG-VERSIONS.md`](OTHER-ZIG-VERSIONS.md).
 
 ## Usage
 

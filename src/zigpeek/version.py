@@ -1,6 +1,8 @@
 import os
 
-DEFAULT_ZIG_VERSION = "0.16.0"
+# "master" tracks the 0.17-dev docs on ziglang.org; switch to "0.17.0"
+# once that release ships.
+DEFAULT_ZIG_VERSION = "master"
 _ENV_VAR = "ZIGPEEK_VERSION"
 
 

@@ -8,3 +8,7 @@ first run.
 The bundle is downloaded from `ziglang.org` at wheel-build time by the
 hatch hook in `hatch_build.py`. Released in lockstep with `zigpeek`
 (pin: `==X.Y.Z`).
+
+The bundled version is `master` (Zig 0.17-dev), so the wheel ships a
+snapshot of whatever master docs were current when it was built. Run
+`zigpeek prefetch --refresh` to pull newer master docs past the snapshot.
