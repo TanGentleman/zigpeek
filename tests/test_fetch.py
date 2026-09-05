@@ -3,7 +3,6 @@ from pathlib import Path
 from zigpeek.fetch import (
     bundled_path_for,
     cache_dir_for,
-    default_cache_root,
     fetch_langref_html,
     fetch_sources_tar,
     langref_url,
@@ -36,16 +35,7 @@ def test_default_cache_dir_falls_back_to_home_cache(tmp_path, monkeypatch):
     monkeypatch.delenv("ZIGPEEK_CACHE_DIR", raising=False)
     monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.delenv("LOCALAPPDATA", raising=False)
     assert cache_dir_for("0.16.0") == tmp_path / ".cache" / "zigpeek" / "0.16.0"
-
-
-def test_default_cache_root_windows_localappdata(tmp_path, monkeypatch):
-    monkeypatch.delenv("ZIGPEEK_CACHE_DIR", raising=False)
-    monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
-    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
-    monkeypatch.setattr("zigpeek.fetch.os.name", "nt")
-    assert default_cache_root() == tmp_path / "zigpeek"
 
 
 def test_cache_dir_override_beats_env(tmp_path, monkeypatch):
