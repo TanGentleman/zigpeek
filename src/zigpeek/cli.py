@@ -1,5 +1,5 @@
 """argparse entrypoint for `zigpeek`. Five stdlib/builtin lookup subcommands
-plus `info` (skill usage + resolved binaries/Zig version), a `prefetch`
+plus `info` (short when/how + resolved binaries/Zig version), a `prefetch`
 helper for offline-first workflows, and a `batch` runner that amortizes
 Python+wasmtime startup across many lookups.
 
@@ -355,7 +355,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_info = sub.add_parser(
         "info",
-        help="Print skill usage, binary paths, and the active Zig version",
+        help="Print when/how to use zigpeek, binary paths, and the active Zig version",
     )
     _add_source_flags(p_info)
     p_info.set_defaults(func=_cmd_info)

@@ -1,7 +1,7 @@
 """Runtime report for ``zigpeek info``.
 
-Prints how to use the zigpeek skill, then the resolved ``zigpeek`` / ``zig``
-binaries and the Zig version this invocation would use for docs.
+A short when/how blurb, then the resolved ``zigpeek`` / ``zig`` binaries
+and the Zig version this invocation would use for docs.
 """
 
 from __future__ import annotations
@@ -19,113 +19,7 @@ from zigpeek.libdir import probe_zig, resolve_lib_dir, zig_binary
 from zigpeek.version import DEFAULT_ZIG_VERSION, resolve_version
 
 USAGE_GUIDE = """\
-# zigpeek
-
-A Python+wasmtime CLI that drives the official autodoc WASM. `search` /
-`get` read the local compiler's `lib/` when `zig` is on PATH (or `$ZIG` /
-`$ZIGPEEK_ZIG`); otherwise they use a `sources.tar` (bundle, cache, or
-ziglang.org). Output is markdown.
-
-## Setup (run once per agent session/sandbox)
-
-```sh
-uv tool install zigpeek                    # enough if the sandbox has zig
-uv tool install "zigpeek[offline]"         # bundles 0.16.0 when it does not
-```
-
-## Usage
-
-```sh
-# Reprint this guide plus binary paths and the active Zig version
-zigpeek info
-
-# Search the stdlib
-zigpeek search ArrayList --limit 10
-
-# Get full docs for a stdlib item
-zigpeek get std.ArrayList
-
-# Get the source file containing an item
-zigpeek get std.ArrayList --source-file
-
-# List all builtin functions
-zigpeek builtins list
-
-# Look up a builtin (by name or keyword)
-zigpeek builtins get atomic
-```
-
-## When to use which command
-
-| Need | Command |
-|------|---------|
-| See usage, binary paths, and the active Zig version | `zigpeek info` |
-| Discover stdlib symbols matching a keyword | `zigpeek search <q>` |
-| Read full docs + signature for a known FQN | `zigpeek get <fqn>` |
-| Read the full source file (terse docstring; want invariants, internals, or per-field implementation) | `zigpeek get <fqn> --source-file` |
-| Browse all `@`-builtins | `zigpeek builtins list` |
-| Look up a specific `@builtin` (accepts `atomic` or `@atomic`) | `zigpeek builtins get <q>` |
-| Warm cache before going offline | `zigpeek prefetch` |
-| Run several lookups in one process (cheap) | `zigpeek batch` |
-
-## Batching multiple lookups
-
-Each invocation pays ~1 s of Python+wasmtime startup. For more than two lookups, use `zigpeek batch` — it reuses the WASM instance and parsed sources across commands.
-
-```sh
-zigpeek batch <<'EOF'
-search ArrayList --limit 5
-get std.ArrayList
-get std.ArrayList --source-file
-builtins get atomic
-EOF
-```
-
-Each command's output is framed with a `===> <command>` separator. Per-line failures are reported inline and **do not abort the batch**; the exit code is the worst across all lines (`0` if all succeeded). `prefetch` and nested `batch` are rejected — run them outside.
-
-Use `zigpeek batch -f commands.txt` to read from a file instead of stdin. Blank lines and lines starting with `#` are ignored.
-
-**Reach for `--source-file` early** when:
-
-- The docstring is one line or missing.
-- The page lists a method signature but elides the body (e.g. `MultiArrayList.items` shows the prototype but the per-field pointer math from `ptrs[@intFromEnum(field)]` only lives in the source).
-- You need invariants, error sets, or how a private field is computed.
-
-## Finding nested types
-
-Inner types live under the **defining module's path**, not the re-export. `std.MultiArrayList` is a re-export from `std.multi_array_list`; its inner `Slice` type only resolves at the defining path:
-
-```sh
-zigpeek get std.multi_array_list.MultiArrayList.Slice   # works
-zigpeek get std.MultiArrayList.Slice                    # not found
-```
-
-If `search` only surfaces a re-export and `get` 404s on the inner type, re-run `get` with the module path.
-
-## Version override
-
-Defaults to the `zig` on PATH (or `$ZIG` / `$ZIGPEEK_ZIG`). If no compiler
-is found, defaults to `0.16.0`. Override with:
-
-```sh
-zigpeek search ArrayList --version 0.15.1
-ZIGPEEK_VERSION=master zigpeek search ArrayList
-zigpeek search ArrayList --lib-dir /path/to/zig/lib
-```
-
-`info` accepts the same `--version`, `--lib-dir`, and `--cache-dir` flags
-so you can see what a later `search` / `get` would resolve to.
-
-## Exit codes
-
-- `0` — success (markdown on stdout)
-- `1` — bad input or "not found" (message on stderr)
-- `2` — network/cache failure (message on stderr)
-
-## Troubleshooting
-
-- **`Declaration "..." not found`** — the FQN is wrong. Two things to try: (1) `zigpeek search` to discover the canonical name; (2) if you searched a re-export (e.g. `std.MultiArrayList`), retry `get` against the defining module path (e.g. `std.multi_array_list.MultiArrayList`).
-- **`network/cache error`** — no `zig` on PATH and no `[offline]` bundle / cache. Install Zig, or `uv tool install "zigpeek[offline]"`, or run `zigpeek prefetch` on a networked host.
+Look up Zig stdlib APIs and @-builtins with zigpeek before guessing signatures. search when you don't know the name, get when you have an FQN, get --source-file when the docs are thin or you need the body, builtins list/get for @-functions, and batch if you have more than two lookups. Inner types live under the defining module path, not the re-export — std.multi_array_list.MultiArrayList.Slice, not std.MultiArrayList.Slice. zigpeek --help lists flags and the other subcommands.
 """
 
 
@@ -267,16 +161,14 @@ def render_environment(info: RuntimeInfo) -> str:
         )
     offline = "installed" if info.offline_installed else "not installed"
     return (
-        "## Environment\n"
-        "\n"
         "zigpeek:\n"
         f"  version:  {info.zigpeek_version}\n"
         f"  binary:   {zigpeek_bin}\n"
         "\n"
-        "zig (compiler on this machine):\n"
+        "zig:\n"
         f"{zig_lines}\n"
         "\n"
-        "docs this invocation would use:\n"
+        "docs:\n"
         f"  version:  {info.docs_version}  ({info.docs_version_reason})\n"
         f"  stdlib:   {info.stdlib_kind}\n"
         f"            {info.stdlib_detail}\n"
@@ -287,4 +179,4 @@ def render_environment(info: RuntimeInfo) -> str:
 
 
 def render_info(info: RuntimeInfo) -> str:
-    return f"{USAGE_GUIDE.rstrip()}\n\n---\n\n{render_environment(info)}"
+    return f"{USAGE_GUIDE.rstrip()}\n\n{render_environment(info)}"

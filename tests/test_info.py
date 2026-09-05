@@ -8,13 +8,14 @@ from zigpeek.version import DEFAULT_ZIG_VERSION
 def test_render_info_includes_skill_usage():
     info = collect_runtime_info()
     text = render_info(info)
-    assert text.startswith("# zigpeek\n")
-    assert "zigpeek info" in text
-    assert "zigpeek search <q>" in text
-    assert "zigpeek get <fqn>" in text
-    assert "zigpeek builtins list" in text
-    assert "zigpeek batch" in text
-    assert "## Environment" in text
+    assert text.startswith("Look up Zig stdlib")
+    assert "search" in text
+    assert "get --source-file" in text
+    assert "builtins" in text
+    assert "batch" in text
+    assert "zigpeek --help" in text
+    assert "##" not in text
+    assert "|" not in text.split("zigpeek:", 1)[0]
 
 
 def test_collect_reports_local_zig(monkeypatch, tmp_path):

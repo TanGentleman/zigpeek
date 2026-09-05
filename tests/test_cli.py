@@ -142,15 +142,15 @@ def test_info_prints_usage_binaries_and_zig_version():
     proc = run_cli("info")
     assert proc.returncode == 0, proc.stderr
     out = proc.stdout
-    assert out.startswith("# zigpeek")
-    assert "zigpeek search" in out
-    assert "zigpeek get" in out
-    assert "zigpeek builtins" in out
-    assert "## Environment" in out
+    assert "Look up Zig stdlib" in out
+    assert "search" in out
+    assert "get --source-file" in out
+    assert "zigpeek --help" in out
+    assert "##" not in out
     assert "zigpeek:" in out
     assert "binary:" in out
-    assert "zig (compiler on this machine):" in out
-    assert "docs this invocation would use:" in out
+    assert "\nzig:\n" in out
+    assert "\ndocs:\n" in out
     assert "version:" in out
 
 
