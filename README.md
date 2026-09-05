@@ -16,6 +16,7 @@ For other Zig versions, see [`OTHER-ZIG-VERSIONS.md`](OTHER-ZIG-VERSIONS.md).
 zigpeek search ArrayList --limit 10              # fuzzy stdlib search
 zigpeek get std.ArrayList                        # full docs for an FQN
 zigpeek get std.ArrayList --source-file          # source file containing it
+zigpeek search ArrayList --lib-dir zig           # local compiler lib/, no download
 zigpeek builtins list                            # all @-builtins
 zigpeek builtins get atomic                      # specific builtin
 zigpeek batch <<EOF                              # amortize startup

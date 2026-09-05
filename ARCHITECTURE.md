@@ -6,7 +6,12 @@
 | `src/zigpeek/stdlib.py`           | markdown rendering against the autodoc WASM         |
 | `src/zigpeek/wasm.py`             | wasmtime driver + typed wrapper around WASM exports |
 | `src/zigpeek/builtins.py`         | langref HTML parser + ranking                       |
+<<<<<<< HEAD
 | `src/zigpeek/fetch.py`            | sources.tar / langref download + XDG cache          |
+=======
+| `src/zigpeek/fetch.py`            | sources.tar / langref download + `/tmp` cache       |
+| `src/zigpeek/libdir.py`           | pack local Zig `lib/` into autodoc `sources.tar`    |
+>>>>>>> ea9dcef (feat: add --lib-dir to pack the local Zig compiler lib/)
 | `src/zigpeek/version.py`          | default Zig version + override resolution           |
 | `src/zigpeek/_vendor/main.wasm`   | autodoc WASM, shipped inside the package            |
 | `vendor/PROVENANCE.md`            | build instructions + SHA256 + upstream commit       |

@@ -15,6 +15,21 @@ zigpeek search ArrayList --version 0.15.1
 ZIGPEEK_VERSION=master zigpeek search ArrayList
 ```
 
+## Local compiler (`--lib-dir`)
+
+If you have Zig installed, skip the `sources.tar` download and read the
+compiler's own `lib/std` instead:
+
+```sh
+zigpeek search ArrayList --lib-dir zig              # `zig env` → lib_dir
+zigpeek get std.ArrayList --lib-dir /path/to/zig/lib
+ZIGPEEK_LIB_DIR=zig zigpeek search ArrayList
+```
+
+`--lib-dir` accepts the compiler `lib/` directory or `lib/std` itself.
+`search` / `get` then match **your** toolchain, not a pinned ziglang.org
+tarball. `builtins` still uses langref.html (download / `[offline]` bundle).
+
 ## Going offline
 
 Warm the cache while you still have network — subsequent calls read from disk:
