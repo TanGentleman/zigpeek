@@ -1,6 +1,6 @@
 ---
 name: zigpeek
-description: Look up Zig standard library APIs and builtin functions via a local CLI. Prefers the zig on PATH (or $ZIG / $ZIGPEEK_ZIG); otherwise Zig 0.16.0. Use before writing or reviewing Zig that touches stdlib — critical for std.Io filesystem APIs (std.Io.Dir, std.Io.File), Reader/Writer interfaces, and std.process.Init. Triggers when answering "how do I X in Zig" or writing Zig that touches files, dirs, env, or process state.
+description: Look up Zig stdlib with the local zigpeek CLI. Run zigpeek info first. Use before writing or reviewing Zig that touches files, dirs, or process state — especially std.Io, Reader/Writer, and std.process.Init.
 ---
 
 # zigpeek

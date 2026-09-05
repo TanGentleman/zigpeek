@@ -1,19 +1,24 @@
 # zigpeek
 
-Fast CLI for Zig stdlib docs. Uses the `zig` on PATH (or `$ZIG` / `$ZIGPEEK_ZIG`); otherwise Zig 0.16.0 from `[offline]`, cache, or ziglang.org.
+Zig stdlib docs in a few seconds. Uses the Zig and agents you already have.
 
 ```sh
 uv tool install zigpeek
-uv tool install 'zigpeek[offline]'   # no local zig
 ```
 
 ```sh
-zigpeek info          # when/how, binaries, active Zig
-zigpeek --help
+zigpeek search ArrayList
+zigpeek get std.Io.Dir.openFile
 ```
 
-`--version` / `$ZIGPEEK_VERSION` pins a ziglang.org tarball (skips local `lib/`). `--lib-dir` / `$ZIGPEEK_LIB_DIR` points at another tree. `prefetch` warms `$XDG_CACHE_HOME/zigpeek` (or `~/.cache/zigpeek`). Nightlies fetch langref from `/documentation/master/`.
+Zig master:
 
-Skill: `cp -r skills/zigpeek ~/.claude/skills/`
+```sh
+ZIGPEEK_VERSION=master zigpeek prefetch
+```
 
-MIT. Internals: [`ARCHITECTURE.md`](ARCHITECTURE.md). WASM: [`vendor/PROVENANCE.md`](vendor/PROVENANCE.md).
+Agent skill: `cp -r skills/zigpeek ~/.claude/skills/`
+
+No Zig: `uv tool install 'zigpeek[offline]'`
+
+MIT. [ARCHITECTURE.md](ARCHITECTURE.md).
