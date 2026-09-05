@@ -80,11 +80,13 @@ If `search` only surfaces a re-export and `get` 404s on the inner type, re-run `
 
 ## Version override
 
-Defaults to Zig `0.16.0`. Override with:
+Defaults to the `zig` on PATH (or `$ZIG` / `$ZIGPEEK_ZIG`). If no compiler
+is found, defaults to `0.16.0`. Override with:
 
 ```sh
 zigpeek search ArrayList --version 0.15.1
 ZIGPEEK_VERSION=master zigpeek search ArrayList
+zigpeek search ArrayList --lib-dir /path/to/zig/lib
 ```
 
 ## Exit codes

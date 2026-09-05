@@ -8,12 +8,23 @@ import httpx
 _CACHE_ENV = "ZIGPEEK_CACHE_DIR"
 
 
+def docs_slug(zig_version: str) -> str:
+    """ziglang.org documentation path for a compiler version string.
+
+    Nightlies are not hosted under ``0.N.0-dev.+hash``; they live at
+    ``/documentation/master/``.
+    """
+    if zig_version in ("master", "latest") or "-dev" in zig_version or "+" in zig_version:
+        return "master"
+    return zig_version
+
+
 def sources_tar_url(zig_version: str) -> str:
-    return f"https://ziglang.org/documentation/{zig_version}/std/sources.tar"
+    return f"https://ziglang.org/documentation/{docs_slug(zig_version)}/std/sources.tar"
 
 
 def langref_url(zig_version: str) -> str:
-    return f"https://ziglang.org/documentation/{zig_version}/"
+    return f"https://ziglang.org/documentation/{docs_slug(zig_version)}/"
 
 
 def default_cache_root() -> Path:

@@ -3,6 +3,7 @@ from pathlib import Path
 from zigpeek.fetch import (
     bundled_path_for,
     cache_dir_for,
+    docs_slug,
     fetch_langref_html,
     fetch_sources_tar,
     langref_url,
@@ -17,6 +18,15 @@ def test_url_builders():
         == "https://ziglang.org/documentation/0.16.0/std/sources.tar"
     )
     assert langref_url("0.16.0") == "https://ziglang.org/documentation/0.16.0/"
+
+
+def test_docs_slug_maps_nightlies_to_master():
+    assert docs_slug("0.16.0") == "0.16.0"
+    assert docs_slug("master") == "master"
+    assert docs_slug("0.17.0-dev.1980+e78ea8f2c") == "master"
+    assert langref_url("0.17.0-dev.1+abc") == (
+        "https://ziglang.org/documentation/master/"
+    )
 
 
 def test_cache_dir_uses_tmp(tmp_path, monkeypatch):

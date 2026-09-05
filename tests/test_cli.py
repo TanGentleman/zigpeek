@@ -133,6 +133,59 @@ def test_search_help_lists_cache_dir():
     proc = run_cli("search", "--help")
     assert proc.returncode == 0
     assert "--cache-dir" in proc.stdout
+    assert "--lib-dir" in proc.stdout
+    assert "ZIGPEEK_ZIG" in proc.stdout
+
+
+def test_search_defaults_to_zig_from_env(tmp_path):
+    lib = SKILL_ROOT / "tests" / "fixtures" / "mini-lib"
+    zig = tmp_path / "zig"
+    zig.write_text(
+        "#!/usr/bin/env python3\n"
+        f'print(\'.{{ .lib_dir = "{lib}", .version = "0.16.0", }}\')\n'
+    )
+    zig.chmod(0o755)
+    proc = run_cli(
+        "search",
+        "Answer",
+        "--limit",
+        "5",
+        env={
+            "ZIG": str(zig),
+            "ZIGPEEK_VERSION": "",
+            "ZIGPEEK_LIB_DIR": "",
+        },
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "std.Answer" in proc.stdout
+
+
+def test_search_with_lib_dir_needs_no_network():
+    lib = SKILL_ROOT / "tests" / "fixtures" / "mini-lib"
+    proc = run_cli("search", "Answer", "--lib-dir", str(lib), "--limit", "5")
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout.startswith("# Search Results")
+    assert "std.Answer" in proc.stdout
+
+
+def test_get_with_lib_dir_needs_no_network():
+    lib = SKILL_ROOT / "tests" / "fixtures" / "mini-lib"
+    proc = run_cli("get", "std.Answer", "--lib-dir", str(lib))
+    assert proc.returncode == 0, proc.stderr
+    assert "The meaning of life." in proc.stdout
+
+
+def test_lib_dir_missing_exits_2(tmp_path):
+    proc = run_cli("search", "Answer", "--lib-dir", str(tmp_path / "nope"))
+    assert proc.returncode == 2
+    assert "network/cache error" in proc.stderr
+
+
+def test_prefetch_with_lib_dir_skips_download():
+    lib = SKILL_ROOT / "tests" / "fixtures" / "mini-lib"
+    proc = run_cli("prefetch", "--lib-dir", str(lib))
+    assert proc.returncode == 0, proc.stderr
+    assert "nothing to prefetch" in proc.stdout
 
 
 def test_builtins_get_empty_returns_exit_1(tmp_path):

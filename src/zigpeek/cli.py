@@ -14,6 +14,7 @@ input lines, so a single not-found does not mask a later cache error.
 import argparse
 import functools
 import io
+import os
 import shlex
 import sys
 from importlib.resources import files
@@ -29,6 +30,7 @@ from zigpeek.fetch import (
     langref_url,
     prefetch as fetch_prefetch,
 )
+from zigpeek.libdir import pack_lib_dir, resolve_lib_dir, resolve_std_dir
 from zigpeek.stdlib import render_get_item, render_search
 from zigpeek.version import resolve_version
 from zigpeek.wasm import WasmStd
@@ -55,8 +57,8 @@ def _wrap_errors(fn):
         except (wasmtime.WasmtimeError, RuntimeError) as e:
             return _err(
                 f"data error: {e}\n"
-                "The cached or bundled sources.tar may be corrupt. "
-                "Try `zigpeek prefetch --refresh`.",
+                "The sources (cache, bundle, or --lib-dir) could not be "
+                "unpacked. Try `zigpeek prefetch --refresh` or a 0.16-compatible lib/.",
                 2,
             )
 
@@ -74,9 +76,29 @@ def _vendor_wasm_bytes() -> bytes:
     return wasm.read_bytes()
 
 
+def _version_is_explicit(args: argparse.Namespace) -> bool:
+    return args.version is not None or bool(os.environ.get("ZIGPEEK_VERSION"))
+
+
+def _resolved_lib_dir(args: argparse.Namespace) -> str | None:
+    # An explicit --version / ZIGPEEK_VERSION pins ziglang.org docs; don't
+    # silently mix that with whatever compiler happens to be on PATH.
+    path = resolve_lib_dir(
+        getattr(args, "lib_dir", None),
+        auto=not _version_is_explicit(args),
+    )
+    return None if path is None else str(path)
+
+
 @functools.lru_cache(maxsize=4)
-def _load_std(version: str, refresh: bool, cache_dir: str | None) -> WasmStd:
-    sources = fetch_sources_tar(version, refresh=refresh, cache_dir=cache_dir)
+def _load_std(
+    version: str, refresh: bool, cache_dir: str | None, lib_dir: str | None
+) -> WasmStd:
+    sources = (
+        pack_lib_dir(lib_dir)
+        if lib_dir
+        else fetch_sources_tar(version, refresh=refresh, cache_dir=cache_dir)
+    )
     return WasmStd(_vendor_wasm_bytes(), sources)
 
 
@@ -94,7 +116,7 @@ def _cmd_search(args: argparse.Namespace) -> int:
     if not args.query:
         return _err("query cannot be empty", 1)
     version = resolve_version(args.version)
-    std = _load_std(version, args.refresh, args.cache_dir)
+    std = _load_std(version, args.refresh, args.cache_dir, _resolved_lib_dir(args))
     sys.stdout.write(render_search(std, args.query, limit=args.limit))
     sys.stdout.write("\n")
     return 0
@@ -105,7 +127,7 @@ def _cmd_get(args: argparse.Namespace) -> int:
     if not args.fqn:
         return _err("fully-qualified name cannot be empty", 1)
     version = resolve_version(args.version)
-    std = _load_std(version, args.refresh, args.cache_dir)
+    std = _load_std(version, args.refresh, args.cache_dir, _resolved_lib_dir(args))
     md = render_get_item(std, args.fqn, get_source_file=args.source_file)
     if md.startswith("# Error"):
         print(md, file=sys.stderr)
@@ -155,6 +177,13 @@ def _cmd_builtins_get(args: argparse.Namespace) -> int:
 @_wrap_errors
 def _cmd_prefetch(args: argparse.Namespace) -> int:
     version = resolve_version(args.version)
+    lib_dir = _resolved_lib_dir(args)
+    if lib_dir:
+        std_dir = resolve_std_dir(Path(lib_dir))
+        sys.stdout.write(
+            f"Stdlib comes from {std_dir}; nothing to prefetch for search/get.\n"
+        )
+        return 0
     paths = fetch_prefetch(version, refresh=args.refresh, cache_dir=args.cache_dir)
     sys.stdout.write(
         f"Prefetched docs for Zig {version}:\n"
@@ -236,7 +265,14 @@ def _cmd_batch(args: argparse.Namespace) -> int:
 
 
 def _add_common(p: argparse.ArgumentParser) -> None:
-    p.add_argument("--version", default=None, help="Zig version (default: 0.16.0)")
+    p.add_argument(
+        "--version",
+        default=None,
+        help=(
+            "Zig version (default: `zig version` if a compiler is on PATH "
+            "or $ZIG / $ZIGPEEK_ZIG, else 0.16.0)"
+        ),
+    )
     p.add_argument(
         "--refresh",
         action="store_true",
@@ -248,6 +284,16 @@ def _add_common(p: argparse.ArgumentParser) -> None:
         help=(
             "Cache directory root (overrides ZIGPEEK_CACHE_DIR; "
             "default: $XDG_CACHE_HOME/zigpeek or ~/.cache/zigpeek)"
+        ),
+    )
+    p.add_argument(
+        "--lib-dir",
+        default=None,
+        metavar="PATH",
+        help=(
+            "Stdlib root (Zig lib/ or std/). Default: the active compiler's "
+            "lib/ when zig is on PATH or $ZIG / $ZIGPEEK_ZIG. Pass 'zig' to "
+            "force that, or a path. Overrides ZIGPEEK_LIB_DIR."
         ),
     )
 
