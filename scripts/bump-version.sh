@@ -21,4 +21,4 @@ sed_inplace "s/^version = \".*\"/version = \"$new\"/" "$data"
 sed_inplace "s/zigpeek-offline==[0-9][0-9a-zA-Z.+-]*/zigpeek-offline==$new/" "$main"
 
 echo "Bumped both pyprojects + offline pin to $new"
-echo "Next: git commit -am 'release $new' && git tag v$new && git push --follow-tags"
+echo "Next: git commit -am 'release $new' && git tag v$new && git push && git push --tags"
