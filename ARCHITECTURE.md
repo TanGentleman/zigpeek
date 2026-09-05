@@ -14,7 +14,7 @@
 | `vendor/PROVENANCE.md`            | build instructions + SHA256 + upstream commit       |
 | `vendor/patches/`                 | local patches applied before rebuilding the WASM    |
 | `packages/zigpeek-offline/`       | data wheel for the `[offline]` extra                |
-| `skills/zigpeek/SKILL.md`         | skill metadata for Claude Code                      |
+| `skills/zigpeek/SKILL.md`         | agent skill: run `zigpeek info`                     |
 
 ## The `[offline]` extra
 

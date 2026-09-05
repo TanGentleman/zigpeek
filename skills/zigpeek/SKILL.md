@@ -5,19 +5,10 @@ description: Look up Zig standard library APIs and builtin functions via a local
 
 # zigpeek
 
-Look up Zig stdlib APIs and `@` builtins via a local CLI. **Start by running:**
-
 ```sh
 zigpeek info
 ```
 
-That prints how to use this skill, where the `zigpeek` and `zig` binaries are, and which Zig version is active.
+That prints when/how to use this CLI, where the binaries are, and which Zig version is active.
 
-If `zigpeek` is missing:
-
-```sh
-uv tool install zigpeek                    # enough if the sandbox has zig
-uv tool install "zigpeek[offline]"         # bundles 0.16.0 when it does not
-```
-
-Then re-run `zigpeek info`.
+If missing: `uv tool install zigpeek` (or `"zigpeek[offline]"` when the sandbox has no zig).
