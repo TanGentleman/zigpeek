@@ -3,6 +3,7 @@
 | File                              | Role                                                |
 | --------------------------------- | --------------------------------------------------- |
 | `src/zigpeek/cli.py`              | argparse entrypoint, exit-code contract             |
+| `src/zigpeek/info.py`             | `zigpeek info` usage guide + resolved binaries/Zig  |
 | `src/zigpeek/stdlib.py`           | markdown rendering against the autodoc WASM         |
 | `src/zigpeek/wasm.py`             | wasmtime driver + typed wrapper around WASM exports |
 | `src/zigpeek/builtins.py`         | langref HTML parser + ranking                       |

@@ -14,6 +14,7 @@ For version pins, `--lib-dir`, and cache paths, see [`OTHER-ZIG-VERSIONS.md`](OT
 ## Usage
 
 ```sh
+zigpeek info                                     # usage, binaries, active Zig
 zigpeek search ArrayList --limit 10              # fuzzy stdlib search
 zigpeek get std.ArrayList                        # full docs for an FQN
 zigpeek get std.ArrayList --source-file          # source file containing it

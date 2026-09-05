@@ -1,6 +1,7 @@
 """argparse entrypoint for `zigpeek`. Five stdlib/builtin lookup subcommands
-plus a `prefetch` helper for offline-first workflows and a `batch` runner
-that amortizes Python+wasmtime startup across many lookups.
+plus `info` (skill usage + resolved binaries/Zig version), a `prefetch`
+helper for offline-first workflows, and a `batch` runner that amortizes
+Python+wasmtime startup across many lookups.
 
 Exit codes:
   0 — success (markdown on stdout)
@@ -30,6 +31,7 @@ from zigpeek.fetch import (
     langref_url,
     prefetch as fetch_prefetch,
 )
+from zigpeek.info import collect_runtime_info, render_info
 from zigpeek.libdir import pack_lib_dir, resolve_lib_dir, resolve_std_dir
 from zigpeek.stdlib import render_get_item, render_search
 from zigpeek.version import resolve_version
@@ -193,6 +195,16 @@ def _cmd_prefetch(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_info(args: argparse.Namespace) -> int:
+    info = collect_runtime_info(
+        version=args.version,
+        lib_dir=getattr(args, "lib_dir", None),
+        cache_dir=args.cache_dir,
+    )
+    sys.stdout.write(render_info(info))
+    return 0
+
+
 def _read_batch_lines(args: argparse.Namespace) -> list[str]:
     if args.file:
         text = args.file.read_text(encoding="utf-8")
@@ -264,7 +276,7 @@ def _cmd_batch(args: argparse.Namespace) -> int:
     return worst
 
 
-def _add_common(p: argparse.ArgumentParser) -> None:
+def _add_source_flags(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--version",
         default=None,
@@ -272,11 +284,6 @@ def _add_common(p: argparse.ArgumentParser) -> None:
             "Zig version (default: `zig version` if a compiler is on PATH "
             "or $ZIG / $ZIGPEEK_ZIG, else 0.16.0)"
         ),
-    )
-    p.add_argument(
-        "--refresh",
-        action="store_true",
-        help="Force re-download of cached resources",
     )
     p.add_argument(
         "--cache-dir",
@@ -295,6 +302,15 @@ def _add_common(p: argparse.ArgumentParser) -> None:
             "lib/ when zig is on PATH or $ZIG / $ZIGPEEK_ZIG. Pass 'zig' to "
             "force that, or a path. Overrides ZIGPEEK_LIB_DIR."
         ),
+    )
+
+
+def _add_common(p: argparse.ArgumentParser) -> None:
+    _add_source_flags(p)
+    p.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Force re-download of cached resources",
     )
 
 
@@ -336,6 +352,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_common(p_pre)
     p_pre.set_defaults(func=_cmd_prefetch)
+
+    p_info = sub.add_parser(
+        "info",
+        help="Print skill usage, binary paths, and the active Zig version",
+    )
+    _add_source_flags(p_info)
+    p_info.set_defaults(func=_cmd_info)
 
     p_batch = sub.add_parser(
         "batch",

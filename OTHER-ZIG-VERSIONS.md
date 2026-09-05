@@ -2,7 +2,8 @@
 
 When `zig` is on PATH (or `$ZIG` / `$ZIGPEEK_ZIG` points at a binary),
 zigpeek uses that compiler's version and `lib/` by default. `search` /
-`get` then need no network.
+`get` then need no network. `zigpeek info` prints the resolved binaries,
+`lib/`, and docs version.
 
 ## Install without a local Zig
 
