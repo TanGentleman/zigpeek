@@ -19,7 +19,18 @@ from zigpeek.libdir import probe_zig, resolve_lib_dir, zig_binary
 from zigpeek.version import DEFAULT_ZIG_VERSION, resolve_version
 
 USAGE_GUIDE = """\
-Look up Zig stdlib APIs and @-builtins before guessing signatures. search when you don't know the name, get when you have an FQN, get --source-file when the docs are thin or you need the body, builtins list/get for @-functions, and batch if you have more than two lookups. Inner types live under the defining module path, not the re-export — std.multi_array_list.MultiArrayList.Slice, not std.MultiArrayList.Slice. zigpeek --help lists flags and the other subcommands.
+Look up Zig stdlib and @-builtins before guessing.
+
+search when you don't know the name
+get when you do
+get --source-file when you need the body
+builtins list / get for @-functions
+batch if you have more than two lookups
+
+Inner types use the module that defines them, not the re-export:
+std.multi_array_list.MultiArrayList.Slice, not std.MultiArrayList.Slice.
+
+zigpeek --help lists the rest.
 """
 
 
