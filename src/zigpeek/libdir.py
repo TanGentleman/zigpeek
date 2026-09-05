@@ -8,14 +8,15 @@ lets ``search`` / ``get`` skip the ziglang.org download.
 from __future__ import annotations
 
 import io
-import json
 import os
+import re
 import subprocess
 import tarfile
 from pathlib import Path
 
 _LIB_DIR_ENV = "ZIGPEEK_LIB_DIR"
 _AUTO = frozenset({"zig", "auto"})
+_LIB_DIR_RE = re.compile(r'\.lib_dir\s*=\s*"([^"]+)"')
 
 
 def resolve_lib_dir(cli_value: str | None) -> Path | None:
@@ -50,14 +51,13 @@ def lib_dir_from_zig_env() -> Path:
         raise FileNotFoundError(f"zig env failed: {err}") from e
     except subprocess.TimeoutExpired as e:
         raise FileNotFoundError("zig env timed out") from e
-    try:
-        data = json.loads(proc.stdout)
-    except json.JSONDecodeError as e:
-        raise FileNotFoundError("zig env produced invalid JSON") from e
-    lib = data.get("lib_dir")
-    if not lib:
+    match = _LIB_DIR_RE.search(proc.stdout)
+    if not match:
         raise FileNotFoundError("zig env did not report lib_dir")
-    return Path(lib)
+    lib = Path(match.group(1))
+    if not lib.is_absolute():
+        lib = (Path.cwd() / lib).resolve()
+    return lib
 
 
 def resolve_std_dir(lib_dir: Path) -> Path:

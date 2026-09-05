@@ -1,5 +1,4 @@
 import io
-import json
 import tarfile
 from pathlib import Path
 
@@ -58,8 +57,9 @@ def test_resolve_lib_dir_zig_sentinel(tmp_path, monkeypatch):
     assert resolve_lib_dir("auto") == tmp_path / "from-zig"
 
 
-def test_lib_dir_from_zig_env_parses_json(monkeypatch, tmp_path):
-    payload = json.dumps({"lib_dir": str(tmp_path / "lib")})
+def test_lib_dir_from_zig_env_parses_zig_struct(monkeypatch, tmp_path):
+    lib = tmp_path / "lib"
+    payload = f'.{{\n    .zig_exe = "/opt/zig/zig",\n    .lib_dir = "{lib}",\n}}\n'
 
     class Proc:
         stdout = payload
@@ -68,7 +68,21 @@ def test_lib_dir_from_zig_env_parses_json(monkeypatch, tmp_path):
         "zigpeek.libdir.subprocess.run",
         lambda *a, **k: Proc(),
     )
-    assert lib_dir_from_zig_env() == tmp_path / "lib"
+    assert lib_dir_from_zig_env() == lib
+
+
+def test_lib_dir_from_zig_env_resolves_relative(monkeypatch, tmp_path):
+    payload = '.{ .lib_dir = "zig/lib", }\n'
+
+    class Proc:
+        stdout = payload
+
+    monkeypatch.setattr(
+        "zigpeek.libdir.subprocess.run",
+        lambda *a, **k: Proc(),
+    )
+    monkeypatch.chdir(tmp_path)
+    assert lib_dir_from_zig_env() == (tmp_path / "zig" / "lib").resolve()
 
 
 def test_lib_dir_from_zig_env_missing_binary(monkeypatch):
