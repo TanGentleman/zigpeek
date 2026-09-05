@@ -148,7 +148,7 @@ def test_get_with_lib_dir_needs_no_network():
     lib = SKILL_ROOT / "tests" / "fixtures" / "mini-lib"
     proc = run_cli("get", "std.Answer", "--lib-dir", str(lib))
     assert proc.returncode == 0, proc.stderr
-    assert "Answer" in proc.stdout
+    assert "The meaning of life." in proc.stdout
 
 
 def test_lib_dir_missing_exits_2(tmp_path):
