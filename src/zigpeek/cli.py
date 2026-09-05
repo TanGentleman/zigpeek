@@ -247,7 +247,7 @@ def _add_common(p: argparse.ArgumentParser) -> None:
         default=None,
         help=(
             "Cache directory root (overrides ZIGPEEK_CACHE_DIR; "
-            "default: /tmp/zigpeek-cache)"
+            "default: $XDG_CACHE_HOME/zigpeek or ~/.cache/zigpeek)"
         ),
     )
 

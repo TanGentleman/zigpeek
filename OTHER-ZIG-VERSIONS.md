@@ -23,10 +23,10 @@ Warm the cache while you still have network — subsequent calls read from disk:
 zigpeek prefetch --version 0.15.1
 ```
 
-Cache lives under `/tmp/zigpeek-cache/<version>/` by default. Override with `--cache-dir` (or `ZIGPEEK_CACHE_DIR`) to persist outside `/tmp`:
+Cache lives under `$XDG_CACHE_HOME/zigpeek/<version>/` (or `~/.cache/zigpeek/<version>/`) by default. Override with `--cache-dir` or `ZIGPEEK_CACHE_DIR`:
 
 ```sh
-zigpeek prefetch --version 0.15.1 --cache-dir ~/.cache/zigpeek
+zigpeek prefetch --version 0.15.1 --cache-dir /mnt/docs-cache
 ```
 
 Pass the same `--cache-dir` on subsequent commands if you used a non-default location.
