@@ -121,6 +121,70 @@ def test_batch_from_file(tmp_path):
     assert "===> search\n" in proc.stdout
 
 
+def test_skill_tells_user_to_run_info():
+    skill = SKILL_ROOT / "skills" / "zigpeek" / "SKILL.md"
+    text = skill.read_text(encoding="utf-8")
+    assert "zigpeek info" in text
+    assert "binar" in text.lower()
+    assert "version" in text.lower()
+
+
+def test_info_help_lists_source_flags_not_refresh():
+    proc = run_cli("info", "--help")
+    assert proc.returncode == 0
+    assert "--version" in proc.stdout
+    assert "--cache-dir" in proc.stdout
+    assert "--lib-dir" in proc.stdout
+    assert "--refresh" not in proc.stdout
+
+
+def test_info_prints_usage_binaries_and_zig_version():
+    proc = run_cli("info")
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout
+    assert "Look up Zig stdlib" in out
+    assert "search" in out
+    assert "get --source-file" in out
+    assert "zigpeek --help" in out
+    assert "##" not in out
+    assert "zigpeek:" in out
+    assert "binary:" in out
+    assert "\nzig:\n" in out
+    assert "\ndocs:\n" in out
+    assert "version:" in out
+
+
+def test_info_reports_zig_from_env(tmp_path):
+    lib = SKILL_ROOT / "tests" / "fixtures" / "mini-lib"
+    zig = tmp_path / "zig"
+    zig.write_text(
+        "#!/usr/bin/env python3\n"
+        f'print(\'.{{ .lib_dir = "{lib}", .version = "0.15.1", }}\')\n'
+    )
+    zig.chmod(0o755)
+    proc = run_cli(
+        "info",
+        env={
+            "ZIG": str(zig),
+            "ZIGPEEK_ZIG": "",
+            "ZIGPEEK_VERSION": "",
+            "ZIGPEEK_LIB_DIR": "",
+        },
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert str(zig) in proc.stdout
+    assert "0.15.1" in proc.stdout
+    assert str(lib) in proc.stdout
+    assert "from local zig" in proc.stdout
+
+
+def test_info_version_pin_is_visible():
+    proc = run_cli("info", "--version", "0.15.1")
+    assert proc.returncode == 0, proc.stderr
+    assert "0.15.1" in proc.stdout
+    assert "pinned by --version" in proc.stdout
+
+
 def test_prefetch_help_lists_flags():
     proc = run_cli("prefetch", "--help")
     assert proc.returncode == 0

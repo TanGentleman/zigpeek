@@ -1,50 +1,19 @@
 # zigpeek
 
-Fast CLI for Zig stdlib docs. Uses your local `zig` when one is on PATH.
-
-## Install
+Fast CLI for Zig stdlib docs. Uses the `zig` on PATH (or `$ZIG` / `$ZIGPEEK_ZIG`); otherwise Zig 0.16.0 from `[offline]`, cache, or ziglang.org.
 
 ```sh
-uv tool install zigpeek                    # local zig, or fetch 0.16.0 docs
-uv tool install 'zigpeek[offline]'         # also bundles 0.16.0 for no-zig hosts
+uv tool install zigpeek
+uv tool install 'zigpeek[offline]'   # no local zig
 ```
-
-For version pins, `--lib-dir`, and cache paths, see [`OTHER-ZIG-VERSIONS.md`](OTHER-ZIG-VERSIONS.md).
-
-## Usage
 
 ```sh
-zigpeek search ArrayList --limit 10              # fuzzy stdlib search
-zigpeek get std.ArrayList                        # full docs for an FQN
-zigpeek get std.ArrayList --source-file          # source file containing it
-zigpeek builtins list                            # all @-builtins
-zigpeek builtins get atomic                      # specific builtin
-zigpeek batch <<EOF                              # amortize startup
-search ArrayList
-get std.ArrayList
-EOF
+zigpeek info          # when/how, binaries, active Zig
+zigpeek --help
 ```
 
-When `zig` is on PATH (or `$ZIG` / `$ZIGPEEK_ZIG`), `search` / `get` read
-that compiler's `lib/`. Otherwise zigpeek falls back to Zig 0.16.0 from
-the `[offline]` bundle, the XDG cache, or ziglang.org.
+`--version` / `$ZIGPEEK_VERSION` pins a ziglang.org tarball (skips local `lib/`). `--lib-dir` / `$ZIGPEEK_LIB_DIR` points at another tree. `prefetch` warms `$XDG_CACHE_HOME/zigpeek` (or `~/.cache/zigpeek`). Nightlies fetch langref from `/documentation/master/`.
 
-## Claude Code skill
+Skill: `cp -r skills/zigpeek ~/.claude/skills/`
 
-```sh
-cp -r skills/zigpeek ~/.claude/skills/
-```
-
-See [`skills/zigpeek/SKILL.md`](skills/zigpeek/SKILL.md) for the
-agent-facing usage.
-
-## License
-
-MIT — see [`LICENSE`](LICENSE) and [`ARCHITECTURE.md`](ARCHITECTURE.md)
-for internals.
-
-## Credits
-
-The vendored autodoc WASM is built from
-[`zig-wasm/zig-mcp`](https://github.com/zig-wasm/zig-mcp); see
-[`vendor/PROVENANCE.md`](vendor/PROVENANCE.md).
+MIT. Internals: [`ARCHITECTURE.md`](ARCHITECTURE.md). WASM: [`vendor/PROVENANCE.md`](vendor/PROVENANCE.md).
