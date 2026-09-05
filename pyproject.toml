@@ -1,7 +1,7 @@
 [project]
 name = "zigpeek"
 version = "0.4.1"
-description = "Fast CLI for Zig 0.16 stdlib + Skill for coding agents"
+description = "Fast CLI for Zig stdlib docs (local compiler or fetched)"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"

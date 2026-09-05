@@ -299,7 +299,7 @@ def _add_common(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="zigpeek", description="Zig 0.16 docs CLI")
+    parser = argparse.ArgumentParser(prog="zigpeek", description="Zig stdlib docs CLI")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_search = sub.add_parser("search", help="Search the standard library")
