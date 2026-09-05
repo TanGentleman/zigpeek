@@ -1,11 +1,11 @@
 import os
+import tempfile
 from importlib.resources import files
 from pathlib import Path
 
 import httpx
 
 _CACHE_ENV = "ZIGPEEK_CACHE_DIR"
-_DEFAULT_CACHE_ROOT = Path("/tmp/zigpeek-cache")
 
 
 def sources_tar_url(zig_version: str) -> str:
@@ -16,11 +16,30 @@ def langref_url(zig_version: str) -> str:
     return f"https://ziglang.org/documentation/{zig_version}/"
 
 
+def default_cache_root() -> Path:
+    """XDG/platform cache root (no version suffix).
+
+    ``ZIGPEEK_CACHE_DIR`` and ``--cache-dir`` override this. Last-resort
+    fallback is ``$TMPDIR/zigpeek`` when no home directory is available.
+    """
+    xdg = os.environ.get("XDG_CACHE_HOME")
+    if xdg:
+        return Path(xdg) / "zigpeek"
+    if os.name == "nt":
+        local = os.environ.get("LOCALAPPDATA")
+        if local:
+            return Path(local) / "zigpeek"
+    try:
+        return Path.home() / ".cache" / "zigpeek"
+    except (RuntimeError, KeyError):
+        return Path(tempfile.gettempdir()) / "zigpeek"
+
+
 def cache_dir_for(zig_version: str, override: Path | str | None = None) -> Path:
     if override is not None:
         return Path(override) / zig_version
     root = os.environ.get(_CACHE_ENV)
-    base = Path(root) if root else _DEFAULT_CACHE_ROOT
+    base = Path(root) if root else default_cache_root()
     return base / zig_version
 
 

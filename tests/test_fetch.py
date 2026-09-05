@@ -25,9 +25,17 @@ def test_cache_dir_uses_tmp(tmp_path, monkeypatch):
     assert d == tmp_path / "0.16.0"
 
 
-def test_default_cache_dir_is_tmp_zigpeek_cache(monkeypatch):
+def test_default_cache_dir_uses_xdg_cache_home(tmp_path, monkeypatch):
     monkeypatch.delenv("ZIGPEEK_CACHE_DIR", raising=False)
-    assert cache_dir_for("0.16.0") == Path("/tmp/zigpeek-cache/0.16.0")
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    assert cache_dir_for("0.16.0") == tmp_path / "zigpeek" / "0.16.0"
+
+
+def test_default_cache_dir_falls_back_to_home_cache(tmp_path, monkeypatch):
+    monkeypatch.delenv("ZIGPEEK_CACHE_DIR", raising=False)
+    monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path))
+    assert cache_dir_for("0.16.0") == tmp_path / ".cache" / "zigpeek" / "0.16.0"
 
 
 def test_cache_dir_override_beats_env(tmp_path, monkeypatch):
