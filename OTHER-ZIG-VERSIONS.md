@@ -10,25 +10,18 @@ uv tool install zigpeek                # or: pipx install zigpeek
 
 ## Selecting a version
 
+When `zig` is on PATH (or `$ZIG` / `$ZIGPEEK_ZIG` points at a binary),
+zigpeek uses that compiler's version and `lib/` by default. Pin a
+ziglang.org tarball with `--version` / `ZIGPEEK_VERSION`, or point at
+another tree with `--lib-dir` / `ZIGPEEK_LIB_DIR`:
+
 ```sh
 zigpeek search ArrayList --version 0.15.1
 ZIGPEEK_VERSION=master zigpeek search ArrayList
-```
-
-## Local compiler (`--lib-dir`)
-
-If you have Zig installed, skip the `sources.tar` download and read the
-compiler's own `lib/std` instead:
-
-```sh
-zigpeek search ArrayList --lib-dir zig              # `zig env` → lib_dir
 zigpeek get std.ArrayList --lib-dir /path/to/zig/lib
-ZIGPEEK_LIB_DIR=zig zigpeek search ArrayList
 ```
 
-`--lib-dir` accepts the compiler `lib/` directory or `lib/std` itself.
-`search` / `get` then match **your** toolchain, not a pinned ziglang.org
-tarball. `builtins` still uses langref.html (download / `[offline]` bundle).
+`builtins` still uses langref.html (download / `[offline]` bundle).
 
 ## Going offline
 

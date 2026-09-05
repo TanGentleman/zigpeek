@@ -134,6 +134,30 @@ def test_search_help_lists_cache_dir():
     assert proc.returncode == 0
     assert "--cache-dir" in proc.stdout
     assert "--lib-dir" in proc.stdout
+    assert "ZIGPEEK_ZIG" in proc.stdout
+
+
+def test_search_defaults_to_zig_from_env(tmp_path):
+    lib = SKILL_ROOT / "tests" / "fixtures" / "mini-lib"
+    zig = tmp_path / "zig"
+    zig.write_text(
+        "#!/usr/bin/env python3\n"
+        f'print(\'.{{ .lib_dir = "{lib}", .version = "0.16.0", }}\')\n'
+    )
+    zig.chmod(0o755)
+    proc = run_cli(
+        "search",
+        "Answer",
+        "--limit",
+        "5",
+        env={
+            "ZIG": str(zig),
+            "ZIGPEEK_VERSION": "",
+            "ZIGPEEK_LIB_DIR": "",
+        },
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "std.Answer" in proc.stdout
 
 
 def test_search_with_lib_dir_needs_no_network():
@@ -161,7 +185,6 @@ def test_prefetch_with_lib_dir_skips_download():
     lib = SKILL_ROOT / "tests" / "fixtures" / "mini-lib"
     proc = run_cli("prefetch", "--lib-dir", str(lib))
     assert proc.returncode == 0, proc.stderr
-    assert "--lib-dir" in proc.stdout
     assert "nothing to prefetch" in proc.stdout
 
 

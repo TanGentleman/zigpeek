@@ -19,9 +19,6 @@ uv tool install "zigpeek[offline]"
 # Search the stdlib
 zigpeek search ArrayList --limit 10
 
-# Use the local Zig compiler's lib/ (no sources.tar download)
-zigpeek search ArrayList --lib-dir zig
-
 # Get full docs for a stdlib item
 zigpeek get std.ArrayList
 
@@ -45,7 +42,6 @@ zigpeek builtins get atomic
 | Browse all `@`-builtins                                                              | `zigpeek builtins list`            |
 | Look up a specific `@builtin` (accepts `atomic` or `@atomic`)                        | `zigpeek builtins get <q>`         |
 | Warm cache before going offline                                                      | `zigpeek prefetch`                 |
-| Use the local Zig compiler's `lib/` (no `sources.tar` download)                      | `zigpeek search <q> --lib-dir zig` |
 | Run several lookups in one process (cheap)                                           | `zigpeek batch`                    |
 
 ## Batching multiple lookups
@@ -84,11 +80,13 @@ If `search` only surfaces a re-export and `get` 404s on the inner type, re-run `
 
 ## Version override
 
-Defaults to Zig `0.16.0`. Override with:
+Defaults to the `zig` on PATH (or `$ZIG` / `$ZIGPEEK_ZIG`). If no compiler
+is found, defaults to `0.16.0`. Override with:
 
 ```sh
 zigpeek search ArrayList --version 0.15.1
 ZIGPEEK_VERSION=master zigpeek search ArrayList
+zigpeek search ArrayList --lib-dir /path/to/zig/lib
 ```
 
 ## Exit codes

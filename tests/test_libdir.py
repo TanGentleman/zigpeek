@@ -5,10 +5,13 @@ from pathlib import Path
 import pytest
 
 from zigpeek.libdir import (
+    ZigEnv,
     lib_dir_from_zig_env,
     pack_lib_dir,
+    probe_zig,
     resolve_lib_dir,
     resolve_std_dir,
+    zig_binary,
 )
 from zigpeek.wasm import WasmStd
 
@@ -59,7 +62,11 @@ def test_resolve_lib_dir_zig_sentinel(tmp_path, monkeypatch):
 
 def test_lib_dir_from_zig_env_parses_zig_struct(monkeypatch, tmp_path):
     lib = tmp_path / "lib"
-    payload = f'.{{\n    .zig_exe = "/opt/zig/zig",\n    .lib_dir = "{lib}",\n}}\n'
+    lib.mkdir()
+    payload = (
+        f'.{{\n    .zig_exe = "/opt/zig/zig",\n    .lib_dir = "{lib}",\n'
+        f'    .version = "0.16.0",\n}}\n'
+    )
 
     class Proc:
         stdout = payload
@@ -68,11 +75,16 @@ def test_lib_dir_from_zig_env_parses_zig_struct(monkeypatch, tmp_path):
         "zigpeek.libdir.subprocess.run",
         lambda *a, **k: Proc(),
     )
+    monkeypatch.setattr("zigpeek.libdir.zig_binary", lambda: "/opt/zig/zig")
     assert lib_dir_from_zig_env() == lib
+    env = probe_zig()
+    assert env == ZigEnv(exe="/opt/zig/zig", lib_dir=lib, version="0.16.0")
 
 
 def test_lib_dir_from_zig_env_resolves_relative(monkeypatch, tmp_path):
-    payload = '.{ .lib_dir = "zig/lib", }\n'
+    lib = tmp_path / "zig" / "lib"
+    lib.mkdir(parents=True)
+    payload = '.{ .lib_dir = "zig/lib", .version = "0.16.0", }\n'
 
     class Proc:
         stdout = payload
@@ -81,17 +93,33 @@ def test_lib_dir_from_zig_env_resolves_relative(monkeypatch, tmp_path):
         "zigpeek.libdir.subprocess.run",
         lambda *a, **k: Proc(),
     )
+    monkeypatch.setattr("zigpeek.libdir.zig_binary", lambda: "zig")
     monkeypatch.chdir(tmp_path)
-    assert lib_dir_from_zig_env() == (tmp_path / "zig" / "lib").resolve()
+    assert lib_dir_from_zig_env() == lib.resolve()
 
 
 def test_lib_dir_from_zig_env_missing_binary(monkeypatch):
-    def boom(*a, **k):
-        raise FileNotFoundError("zig")
-
-    monkeypatch.setattr("zigpeek.libdir.subprocess.run", boom)
+    monkeypatch.setattr("zigpeek.libdir.zig_binary", lambda: None)
     with pytest.raises(FileNotFoundError, match="zig not found"):
         lib_dir_from_zig_env()
+
+
+def test_zig_binary_prefers_env(monkeypatch, tmp_path):
+    monkeypatch.setenv("ZIGPEEK_ZIG", str(tmp_path / "custom-zig"))
+    monkeypatch.setenv("ZIG", "/ignored")
+    assert zig_binary() == str(tmp_path / "custom-zig")
+    monkeypatch.delenv("ZIGPEEK_ZIG")
+    assert zig_binary() == "/ignored"
+
+
+def test_resolve_lib_dir_auto_uses_probe(tmp_path, monkeypatch):
+    monkeypatch.delenv("ZIGPEEK_LIB_DIR", raising=False)
+    monkeypatch.setattr(
+        "zigpeek.libdir.probe_zig",
+        lambda: ZigEnv(exe="zig", lib_dir=tmp_path / "lib", version="0.16.0"),
+    )
+    assert resolve_lib_dir(None) is None
+    assert resolve_lib_dir(None, auto=True) == tmp_path / "lib"
 
 
 def test_pack_feeds_wasm_search():

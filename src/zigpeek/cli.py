@@ -14,6 +14,7 @@ input lines, so a single not-found does not mask a later cache error.
 import argparse
 import functools
 import io
+import os
 import shlex
 import sys
 from importlib.resources import files
@@ -75,8 +76,17 @@ def _vendor_wasm_bytes() -> bytes:
     return wasm.read_bytes()
 
 
+def _version_is_explicit(args: argparse.Namespace) -> bool:
+    return args.version is not None or bool(os.environ.get("ZIGPEEK_VERSION"))
+
+
 def _resolved_lib_dir(args: argparse.Namespace) -> str | None:
-    path = resolve_lib_dir(getattr(args, "lib_dir", None))
+    # An explicit --version / ZIGPEEK_VERSION pins ziglang.org docs; don't
+    # silently mix that with whatever compiler happens to be on PATH.
+    path = resolve_lib_dir(
+        getattr(args, "lib_dir", None),
+        auto=not _version_is_explicit(args),
+    )
     return None if path is None else str(path)
 
 
@@ -171,8 +181,7 @@ def _cmd_prefetch(args: argparse.Namespace) -> int:
     if lib_dir:
         std_dir = resolve_std_dir(Path(lib_dir))
         sys.stdout.write(
-            f"Stdlib comes from --lib-dir ({std_dir}); "
-            "nothing to prefetch for search/get.\n"
+            f"Stdlib comes from {std_dir}; nothing to prefetch for search/get.\n"
         )
         return 0
     paths = fetch_prefetch(version, refresh=args.refresh, cache_dir=args.cache_dir)
@@ -256,7 +265,14 @@ def _cmd_batch(args: argparse.Namespace) -> int:
 
 
 def _add_common(p: argparse.ArgumentParser) -> None:
-    p.add_argument("--version", default=None, help="Zig version (default: 0.16.0)")
+    p.add_argument(
+        "--version",
+        default=None,
+        help=(
+            "Zig version (default: `zig version` if a compiler is on PATH "
+            "or $ZIG / $ZIGPEEK_ZIG, else 0.16.0)"
+        ),
+    )
     p.add_argument(
         "--refresh",
         action="store_true",
@@ -275,9 +291,9 @@ def _add_common(p: argparse.ArgumentParser) -> None:
         default=None,
         metavar="PATH",
         help=(
-            "Read stdlib from a local Zig lib/ (or std/) instead of "
-            "downloading sources.tar. Pass 'zig' to detect via `zig env`. "
-            "Overrides ZIGPEEK_LIB_DIR."
+            "Stdlib root (Zig lib/ or std/). Default: the active compiler's "
+            "lib/ when zig is on PATH or $ZIG / $ZIGPEEK_ZIG. Pass 'zig' to "
+            "force that, or a path. Overrides ZIGPEEK_LIB_DIR."
         ),
     )
 
