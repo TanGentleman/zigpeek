@@ -8,7 +8,7 @@
 | `src/zigpeek/builtins.py`         | langref HTML parser + ranking                       |
 | `src/zigpeek/fetch.py`            | sources.tar / langref download + XDG cache          |
 | `src/zigpeek/libdir.py`           | pack local Zig `lib/` into autodoc `sources.tar`    |
-| `src/zigpeek/version.py`          | default Zig version + override resolution           |
+| `src/zigpeek/version.py`          | local `zig` version, else 0.16.0; `--version` pin   |
 | `src/zigpeek/_vendor/main.wasm`   | autodoc WASM, shipped inside the package            |
 | `vendor/PROVENANCE.md`            | build instructions + SHA256 + upstream commit       |
 | `vendor/patches/`                 | local patches applied before rebuilding the WASM    |
@@ -42,6 +42,8 @@ CI (`release.yml`) builds both wheels, verifies versions match the tag,
 publishes via PyPI trusted publishing, and attaches artifacts to a
 GitHub Release. If `DEFAULT_ZIG_VERSION` changes, also bump
 `ZIG_VERSION` in `packages/zigpeek-offline/hatch_build.py` first.
+A local-`zig` default does **not** require a WASM rebuild or an
+offline-bundle version bump; those stay on the 0.16.0 fallback.
 
 ## Updating the vendored WASM
 

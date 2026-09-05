@@ -1,14 +1,15 @@
 # zigpeek
 
-Fast CLI for Zig 0.16 stdlib + Skill for coding agents.
+Fast CLI for Zig stdlib docs. Uses your local `zig` when one is on PATH.
 
 ## Install
 
 ```sh
-uv tool install 'zigpeek[offline]'     # bundles Zig 0.16.0 docs; no network needed
+uv tool install zigpeek                    # local zig, or fetch 0.16.0 docs
+uv tool install 'zigpeek[offline]'         # also bundles 0.16.0 for no-zig hosts
 ```
 
-For other Zig versions, see [`OTHER-ZIG-VERSIONS.md`](OTHER-ZIG-VERSIONS.md).
+For version pins, `--lib-dir`, and cache paths, see [`OTHER-ZIG-VERSIONS.md`](OTHER-ZIG-VERSIONS.md).
 
 ## Usage
 
@@ -23,6 +24,10 @@ search ArrayList
 get std.ArrayList
 EOF
 ```
+
+When `zig` is on PATH (or `$ZIG` / `$ZIGPEEK_ZIG`), `search` / `get` read
+that compiler's `lib/`. Otherwise zigpeek falls back to Zig 0.16.0 from
+the `[offline]` bundle, the XDG cache, or ziglang.org.
 
 ## Claude Code skill
 

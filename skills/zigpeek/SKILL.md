@@ -1,16 +1,20 @@
 ---
 name: zigpeek
-description: Look up Zig 0.16 standard library APIs and builtin functions via a local CLI. Use before writing or reviewing Zig code that touches stdlib — critical for std.Io filesystem APIs (std.Io.Dir, std.Io.File), Reader/Writer interfaces, and std.process.Init. Triggers when answering "how do I X in Zig" or writing Zig that touches files, dirs, env, or process state.
+description: Look up Zig standard library APIs and builtin functions via a local CLI. Prefers the zig on PATH (or $ZIG / $ZIGPEEK_ZIG); otherwise Zig 0.16.0. Use before writing or reviewing Zig that touches stdlib — critical for std.Io filesystem APIs (std.Io.Dir, std.Io.File), Reader/Writer interfaces, and std.process.Init. Triggers when answering "how do I X in Zig" or writing Zig that touches files, dirs, env, or process state.
 ---
 
 # zigpeek
 
-A Python+wasmtime CLI that drives the same autodoc WASM module the official Zig docs use, against the same `sources.tar` from `ziglang.org`. Output is markdown.
+A Python+wasmtime CLI that drives the official autodoc WASM. `search` /
+`get` read the local compiler's `lib/` when `zig` is on PATH (or `$ZIG` /
+`$ZIGPEEK_ZIG`); otherwise they use a `sources.tar` (bundle, cache, or
+ziglang.org). Output is markdown.
 
 ## Setup (run once per agent session/sandbox)
 
 ```sh
-uv tool install "zigpeek[offline]"
+uv tool install zigpeek                    # enough if the sandbox has zig
+uv tool install "zigpeek[offline]"         # bundles 0.16.0 when it does not
 ```
 
 ## Usage
@@ -97,3 +101,4 @@ zigpeek search ArrayList --lib-dir /path/to/zig/lib
 
 ## Troubleshooting
 - **`Declaration "..." not found`** — the FQN is wrong. Two things to try: (1) `zigpeek search` to discover the canonical name; (2) if you searched a re-export (e.g. `std.MultiArrayList`), retry `get` against the defining module path (e.g. `std.multi_array_list.MultiArrayList`).
+- **`network/cache error`** — no `zig` on PATH and no `[offline]` bundle / cache. Install Zig, or `uv tool install "zigpeek[offline]"`, or run `zigpeek prefetch` on a networked host.
