@@ -1,6 +1,6 @@
 [project]
 name = "zigpeek"
-version = "0.5.0"
+version = "0.5.1"
 description = "Fast CLI for Zig stdlib docs (local compiler or fetched)"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -16,7 +16,7 @@ dependencies = [
 # `uv tool install 'zigpeek[offline]'` pulls in the prefetched docs bundle,
 # so first run needs no network. Pin is exact: the data wheel is built and
 # published in lockstep with this one.
-offline = ["zigpeek-offline==0.5.0"]
+offline = ["zigpeek-offline==0.5.1"]
 
 [project.urls]
 Homepage = "https://github.com/TanGentleman/zigpeek"
