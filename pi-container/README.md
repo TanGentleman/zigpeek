@@ -52,7 +52,8 @@ container build -t pi-agent:local .   # skip when that image is already built
 
 `check` creates the `pi-locked` network, builds the small proxy image, and starts `pi-proxy`.
 It confirms Pi has the OpenRouter placeholder rather than your key, prints the key's credit
-limit, checks GitHub, and checks that `example.com` and a direct connection are refused.
+limit, checks GitHub, and checks that `example.com` is refused and that a direct connection
+to an IP address fails.
 It spends no OpenRouter credits. The first run is the slow one, because it builds `pi-proxy`.
 
 If an earlier try created the `host.container.internal` domain, delete it so iCloud Private Relay
@@ -79,7 +80,9 @@ VM. `pi-proxy` keeps running. Do not run `/login`. That would save a real key in
 settings volume.
 
 `run.sh proxy` follows `pi-proxy`'s log. `run.sh proxy-stop` stops it. A normal `pic` starts
-it again when it is not already up. Refusals show up as `deny` lines in that log.
+it again when it is not already up. The log lines are `listening`, `allow`, and `deny`.
+`run.sh` waits until that listener answers a health check run inside `pi-proxy`, and Pi
+uses that address.
 
 ## Keys
 
@@ -109,6 +112,9 @@ Pi's install ping and `gh` telemetry are turned off. `pi.dev` is not reachable a
 - `pi-locked` is host-only. `run.sh` creates it as `172.30.240.0/24` when the name is not already there; an existing `pi-locked` network is left as it is.
   Pi can reach your Mac and other containers on that network. `pi-proxy` listens only on
   its `pi-locked` address, so a container on `default` cannot use the key.
+- If the Mac is forwarding IP (`sysctl net.inet.ip.forwarding` prints `1`), a host-only
+  network can still open TCP to the internet. `run.sh check` reports that as a direct
+  connection. Forwarding is off unless a VPN or Internet Sharing turned it on.
 - `run.sh` will not mount `~` or `/`. `--clone` keeps the repo in a volume until you `git push`.
   `container volume list` shows `pi-agent-home` and any clone volumes.
 - `PI_CPUS` (default 4) and `PI_MEMORY` (default 4G) size the Pi VM. The proxy VM is 1 CPU and 1G.

@@ -28,6 +28,7 @@ ENV_FILE = os.environ.get("PI_ENV_FILE", "")
 CERT = os.environ.get("PI_PROXY_CERT", "/private/openrouter.pem")
 KEY = os.environ.get("PI_PROXY_KEY", "/private/openrouter.key")
 CA = os.environ.get("PI_PROXY_CA", "/certs/ca.pem")
+ADDR = os.environ.get("PI_PROXY_ADDR_FILE", "/private/proxy.addr")
 PORT = int(os.environ.get("PI_PROXY_PORT", "8888"))
 UPSTREAM_HOST = os.environ.get("PI_PROXY_OPENROUTER_HOST", "")
 UPSTREAM_PORT = int(os.environ.get("PI_PROXY_OPENROUTER_PORT", "443"))
@@ -263,28 +264,31 @@ async def handle(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> 
             pass
 
 
+def openssl(args: list[str]) -> None:
+    # Key generation writes a progress meter to stderr. That is the wall of
+    # symbols in `container logs`, and it is not a failure.
+    subprocess.run(args, check=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 def ensure_certs() -> None:
     if os.path.isfile(CERT) and os.path.isfile(KEY) and os.path.isfile(CA):
         return
     os.makedirs(os.path.dirname(CERT), exist_ok=True)
     os.makedirs(os.path.dirname(CA), exist_ok=True)
-    subprocess.run(
+    openssl(
         ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-sha256", "-days", "3650", "-nodes",
-         "-keyout", os.path.join(os.path.dirname(CERT), "ca.key"), "-out", CA, "-subj", "/CN=pi-container proxy"],
-        check=True, stdout=subprocess.DEVNULL)
+         "-keyout", os.path.join(os.path.dirname(CERT), "ca.key"), "-out", CA, "-subj", "/CN=pi-container proxy"])
     csr = os.path.join(os.path.dirname(CERT), "openrouter.csr")
     ext = os.path.join(os.path.dirname(CERT), "openrouter.ext")
-    subprocess.run(
-        ["openssl", "req", "-newkey", "rsa:2048", "-nodes", "-keyout", KEY, "-out", csr, "-subj", "/CN=openrouter.ai"],
-        check=True, stdout=subprocess.DEVNULL)
+    openssl(
+        ["openssl", "req", "-newkey", "rsa:2048", "-nodes", "-keyout", KEY, "-out", csr, "-subj", "/CN=openrouter.ai"])
     with open(ext, "w", encoding="utf-8") as fh:
         fh.write("subjectAltName=DNS:openrouter.ai,DNS:*.openrouter.ai\nbasicConstraints=CA:FALSE\nextendedKeyUsage=serverAuth\n")
-    subprocess.run(
+    openssl(
         ["openssl", "x509", "-req", "-in", csr, "-CA", CA,
          "-CAkey", os.path.join(os.path.dirname(CERT), "ca.key"),
          "-CAserial", os.path.join(os.path.dirname(CERT), "ca.srl"), "-CAcreateserial",
-         "-out", CERT, "-days", "825", "-sha256", "-extfile", ext],
-        check=True, stdout=subprocess.DEVNULL)
+         "-out", CERT, "-days", "825", "-sha256", "-extfile", ext])
     os.chmod(CA, 0o644)
     for path in (KEY, CERT, os.path.join(os.path.dirname(CERT), "ca.key")):
         os.chmod(path, 0o600)
@@ -347,7 +351,29 @@ def locked_ip() -> str | None:
     return chosen
 
 
+def clear_addr() -> None:
+    try:
+        os.remove(ADDR)
+    except OSError:
+        pass
+
+
+def publish_addr(bind: str) -> None:
+    """Tell the Mac which address this process bound, so Pi can use it as its proxy."""
+    directory = os.path.dirname(ADDR)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    tmp = ADDR + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        fh.write(bind + "\n")
+        fh.flush()
+        os.fsync(fh.fileno())
+    os.chmod(tmp, 0o644)
+    os.replace(tmp, ADDR)
+
+
 def main() -> None:
+    clear_addr()
     try:
         openrouter_key()
         ensure_certs()
@@ -364,6 +390,7 @@ def main() -> None:
 
     async def serve() -> None:
         server = await asyncio.start_server(handle, bind, PORT)
+        publish_addr(bind)
         log(f"listening {bind}:{PORT}")
         async with server:
             await server.serve_forever()

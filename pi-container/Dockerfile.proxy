@@ -6,5 +6,6 @@ RUN apt-get update \
 COPY proxy.py /usr/local/bin/proxy.py
 ENV PI_PROXY_CERT=/private/openrouter.pem \
     PI_PROXY_KEY=/private/openrouter.key \
-    PI_PROXY_CA=/certs/ca.pem
+    PI_PROXY_CA=/certs/ca.pem \
+    PI_PROXY_ADDR_FILE=/private/proxy.addr
 ENTRYPOINT ["python3", "-u", "/usr/local/bin/proxy.py"]
