@@ -1,0 +1,10 @@
+# The allowlist proxy. Python stays in this image; the Mac does not need it.
+FROM python:3.12-slim-bookworm
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates openssl \
+    && rm -rf /var/lib/apt/lists/*
+COPY proxy.py /usr/local/bin/proxy.py
+ENV PI_PROXY_CERT=/private/openrouter.pem \
+    PI_PROXY_KEY=/private/openrouter.key \
+    PI_PROXY_CA=/certs/ca.pem
+ENTRYPOINT ["python3", "-u", "/usr/local/bin/proxy.py"]

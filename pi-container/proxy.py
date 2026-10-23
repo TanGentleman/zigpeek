@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-"""Host proxy for the Pi container.
+"""Allowlist proxy for the Pi container. It runs in its own container, not on the Mac.
 
 Tunnels GitHub. Terminates TLS for openrouter.ai and adds the real API key,
-which never enters the container. Refuses every other destination.
+which never enters the Pi container. Refuses every other destination.
 """
 from __future__ import annotations
 
 import asyncio
 import os
+import socket
 import ssl
+import struct
+import subprocess
 import sys
+import time
 
 GITHUB = {
     "github.com",
@@ -20,11 +24,11 @@ GITHUB = {
     "uploads.github.com",
 }
 MAX_BODY = 64 * 1024 * 1024
-ENV_FILE = os.environ["PI_ENV_FILE"]
-CERT = os.environ["PI_PROXY_CERT"]
-KEY = os.environ["PI_PROXY_KEY"]
+ENV_FILE = os.environ.get("PI_ENV_FILE", "")
+CERT = os.environ.get("PI_PROXY_CERT", "/private/openrouter.pem")
+KEY = os.environ.get("PI_PROXY_KEY", "/private/openrouter.key")
+CA = os.environ.get("PI_PROXY_CA", "/certs/ca.pem")
 PORT = int(os.environ.get("PI_PROXY_PORT", "8888"))
-BIND = os.environ.get("PI_PROXY_BIND", "127.0.0.1")
 UPSTREAM_HOST = os.environ.get("PI_PROXY_OPENROUTER_HOST", "")
 UPSTREAM_PORT = int(os.environ.get("PI_PROXY_OPENROUTER_PORT", "443"))
 UPSTREAM_TLS = os.environ.get("PI_PROXY_OPENROUTER_TLS", "1") != "0"
@@ -38,7 +42,18 @@ def file_mode(path: str) -> int:
     return os.stat(path).st_mode & 0o777
 
 
+def check_key(value: str) -> str:
+    if not value or any(c in value for c in "\r\n\x00 "):
+        raise RuntimeError("OPENROUTER_API_KEY is missing or not a single token")
+    return value
+
+
 def openrouter_key() -> str:
+    env = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if env:
+        return check_key(env)
+    if not ENV_FILE:
+        raise RuntimeError("OPENROUTER_API_KEY is not set")
     if file_mode(ENV_FILE) & 0o077:
         raise RuntimeError("env file is readable by group or other")
     value = ""
@@ -50,9 +65,7 @@ def openrouter_key() -> str:
             name, raw = line.split("=", 1)
             if name.strip() == "OPENROUTER_API_KEY":
                 value = raw.strip()
-    if not value or any(c in value for c in "\r\n\x00 "):
-        raise RuntimeError("OPENROUTER_API_KEY is missing or not a single token")
-    return value
+    return check_key(value)
 
 
 def allowed_github(host: str) -> bool:
@@ -250,16 +263,108 @@ async def handle(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> 
             pass
 
 
+def ensure_certs() -> None:
+    if os.path.isfile(CERT) and os.path.isfile(KEY) and os.path.isfile(CA):
+        return
+    os.makedirs(os.path.dirname(CERT), exist_ok=True)
+    os.makedirs(os.path.dirname(CA), exist_ok=True)
+    subprocess.run(
+        ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-sha256", "-days", "3650", "-nodes",
+         "-keyout", os.path.join(os.path.dirname(CERT), "ca.key"), "-out", CA, "-subj", "/CN=pi-container proxy"],
+        check=True, stdout=subprocess.DEVNULL)
+    csr = os.path.join(os.path.dirname(CERT), "openrouter.csr")
+    ext = os.path.join(os.path.dirname(CERT), "openrouter.ext")
+    subprocess.run(
+        ["openssl", "req", "-newkey", "rsa:2048", "-nodes", "-keyout", KEY, "-out", csr, "-subj", "/CN=openrouter.ai"],
+        check=True, stdout=subprocess.DEVNULL)
+    with open(ext, "w", encoding="utf-8") as fh:
+        fh.write("subjectAltName=DNS:openrouter.ai,DNS:*.openrouter.ai\nbasicConstraints=CA:FALSE\nextendedKeyUsage=serverAuth\n")
+    subprocess.run(
+        ["openssl", "x509", "-req", "-in", csr, "-CA", CA,
+         "-CAkey", os.path.join(os.path.dirname(CERT), "ca.key"),
+         "-CAserial", os.path.join(os.path.dirname(CERT), "ca.srl"), "-CAcreateserial",
+         "-out", CERT, "-days", "825", "-sha256", "-extfile", ext],
+        check=True, stdout=subprocess.DEVNULL)
+    os.chmod(CA, 0o644)
+    for path in (KEY, CERT, os.path.join(os.path.dirname(CERT), "ca.key")):
+        os.chmod(path, 0o600)
+    os.remove(csr)
+    os.remove(ext)
+
+
+def iface_ipv4(name: str) -> str | None:
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        packed = struct.pack("256s", name.encode()[:15])
+        return socket.inet_ntoa(fcntl_ioctl(sock, packed)[20:24])
+    except OSError:
+        return None
+    finally:
+        sock.close()
+
+
+def fcntl_ioctl(sock: socket.socket, packed: bytes) -> bytes:
+    import fcntl
+    return fcntl.ioctl(sock.fileno(), 0x8915, packed)
+
+
+def default_iface() -> str | None:
+    try:
+        lines = open("/proc/net/route", encoding="utf-8").read().splitlines()[1:]
+    except OSError:
+        return None
+    for line in lines:
+        iface, dest, *_rest = line.split()
+        if dest == "00000000":
+            return iface
+    return None
+
+
+def locked_ip() -> str | None:
+    """Address on the interface that is not the default route.
+
+    The proxy container is on two networks. The first, the default route, is
+    the one with internet. Pi shares only the other network, and that is the
+    only address this proxy listens on.
+    """
+    forced = os.environ.get("PI_PROXY_BIND", "")
+    if forced:
+        return forced
+    default = default_iface()
+    if not default:
+        return None
+    try:
+        names = sorted(os.listdir("/sys/class/net"))
+    except OSError:
+        return None
+    chosen = None
+    for name in names:
+        if name == "lo" or name == default:
+            continue
+        ip = iface_ipv4(name)
+        if ip and ip != "0.0.0.0":
+            chosen = ip
+    return chosen
+
+
 def main() -> None:
-    if file_mode(ENV_FILE) & 0o077:
-        raise SystemExit(f"proxy: chmod 600 {ENV_FILE}")
-    openrouter_key()
-    if not os.path.isfile(CERT) or not os.path.isfile(KEY):
-        raise SystemExit("proxy: missing TLS certificate; start it from run.sh")
+    try:
+        openrouter_key()
+        ensure_certs()
+    except Exception as exc:
+        raise SystemExit(f"proxy: {exc}") from exc
+    bind = None
+    for _ in range(50):
+        bind = locked_ip()
+        if bind:
+            break
+        time.sleep(0.1)
+    if not bind:
+        raise SystemExit("proxy: no address on the locked network")
 
     async def serve() -> None:
-        server = await asyncio.start_server(handle, BIND, PORT)
-        log(f"listening {BIND}:{PORT}")
+        server = await asyncio.start_server(handle, bind, PORT)
+        log(f"listening {bind}:{PORT}")
         async with server:
             await server.serve_forever()
 
