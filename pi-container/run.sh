@@ -7,7 +7,7 @@
 #   run.sh proxy-stop              stop the proxy container
 set -euo pipefail
 
-here=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
+here=$(CDPATH= cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 env_file="${PI_ENV_FILE:-$HOME/.config/pi-container/env}"
 cfg="${PI_CONFIG_DIR:-$HOME/.config/pi-container}"
 port="${PI_PROXY_PORT:-8888}"
@@ -59,28 +59,31 @@ write_proxy_env() {
   fi
 }
 
-# Prints the proxy's state and its address on pi-locked, one per line.
-# `container inspect` prints pretty JSON. An attachment object holds both
-# "ipv4Address" and "network", in whichever order, so split on "}".
-proxy_facts() {
-  json=$("$cli" inspect "$proxy_name" 2>/dev/null) || { printf '\n\n'; return; }
+addr_file() { printf '%s\n' "$cfg/private/proxy.addr"; }
+
+# `container inspect` prints pretty JSON. Current releases nest the value in
+# status.state. Older releases use a top-level status string. Split on "}"
+# so either shape is one record.
+proxy_state() {
+  json=$("$cli" inspect "$proxy_name" 2>/dev/null) || { printf '\n'; return; }
   printf '%s\n' "$json" | awk '
     BEGIN { RS = "}" }
-    /"state"[[:space:]]*:/ {
+    /"state"[[:space:]]*:[[:space:]]*"/ || /"status"[[:space:]]*:[[:space:]]*"/ {
       s = $0
-      sub(/.*"state"[[:space:]]*:[[:space:]]*"/, "", s)
+      sub(/.*"(state|status)"[[:space:]]*:[[:space:]]*"/, "", s)
       sub(/".*/, "", s)
       if (s ~ /^(running|stopped|stopping|unknown)$/) state = s
     }
-    /"ipv4Address"/ && /"network"[[:space:]]*:[[:space:]]*"pi-locked"/ {
-      ip = $0
-      sub(/.*"ipv4Address"[[:space:]]*:[[:space:]]*"/, "", ip)
-      sub(/".*/, "", ip)
-      sub(/\/.*/, "", ip)
-      if (ip ~ /^[0-9.]+$/) locked = ip
-    }
-    END { print state; print locked }
+    END { print state }
   '
+}
+
+valid_ip() {
+  local ip=$1 o
+  [[ $ip =~ ^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || return 1
+  for o in "${BASH_REMATCH[@]:1}"; do
+    ((10#$o <= 255)) || return 1
+  done
 }
 
 ensure_proxy() {
@@ -106,16 +109,19 @@ ensure_proxy() {
     fi
     touch "$stamp"
   fi
-  facts=$(proxy_facts || true)
-  state=$(printf '%s\n' "$facts" | sed -n '1p')
+  state=$(proxy_state || true)
+  state=$(printf '%s\n' "$state" | sed -n '1p')
   if [ "$state" = running ]; then
     return
   fi
+  # The address file is published only after the socket is bound. Drop a
+  # stale one so a previous run cannot look ready during this boot.
+  rm -f "$(addr_file)"
   if [ "$state" = stopped ] || [ "$state" = stopping ]; then
     "$cli" start "$proxy_name"
     return
   fi
-  "$cli" run -d --name "$proxy_name" \
+  "$cli" run -d --name "$proxy_name" --init \
     --cpus 1 --memory 1G \
     --network default --network pi-locked \
     --env-file "$cfg/proxy.env" \
@@ -123,21 +129,45 @@ ensure_proxy() {
     "$proxy_image" >/dev/null
 }
 
+# Pi reaches the proxy on the locked network. Ask from inside that container,
+# which is the path Pi uses.
+proxy_answers() {
+  "$cli" exec "$proxy_name" /usr/local/bin/python3 -c \
+    'import sys,urllib.request
+ip, port = sys.argv[1], sys.argv[2]
+body = urllib.request.urlopen("http://%s:%s/health" % (ip, port), timeout=2).read()
+raise SystemExit(0 if body == b"pi-container-proxy\n" else 1)' \
+    "$1" "$port"
+}
+
 proxy_ip() {
+  file=$(addr_file)
+  ip=""
   i=0
-  while [ "$i" -lt 90 ]; do
-    facts=$(proxy_facts || true)
-    ip=$(printf '%s\n' "$facts" | sed -n '2p')
-    if [ -n "$ip" ] && curl -fsS -m 2 "http://${ip}:${port}/health" 2>/dev/null | grep -qx pi-container-proxy; then
-      printf '%s\n' "$ip"
-      return
+  tries="${PI_PROXY_WAIT:-90}"
+  while [ "$i" -lt "$tries" ]; do
+    if [ -f "$file" ]; then
+      ip=$(tr -d '[:space:]' < "$file" || true)
+      if valid_ip "$ip" && proxy_answers "$ip" >/dev/null 2>&1; then
+        printf '%s\n' "$ip"
+        return
+      fi
     fi
     i=$((i + 1))
-    sleep 0.5
+    sleep 1
   done
-  echo "run.sh: the proxy container did not come up. Run: $cli logs $proxy_name" >&2
+  if valid_ip "${ip:-}"; then
+    echo "run.sh: pi-proxy is listening on ${ip}:${port} but did not answer from inside the container. Run: $cli logs $proxy_name" >&2
+  else
+    echo "run.sh: pi-proxy did not report an address. Run: $cli logs $proxy_name" >&2
+  fi
   exit 1
 }
+
+# Tests source this file to call the functions above. They do not start a container.
+if [ "${PI_SOURCE_ONLY:-}" = 1 ]; then
+  return 0 2>/dev/null || exit 0
+fi
 
 if [ "${1:-}" = proxy-stop ]; then
   "$cli" stop "$proxy_name" >/dev/null 2>&1 || true
@@ -205,9 +235,13 @@ if curl -fsS -m 15 -o /dev/null https://example.com; then
   echo "FAIL: example.com was reachable"; s=1
 else echo "example.com blocked"; fi
 echo "== no route around the proxy"
-if env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy \
-    curl -m 5 -fsS -o /dev/null https://github.com; then
-  echo "FAIL: the container reached GitHub directly"; s=1
+# An IP, not a name. Host-only networks have no DNS, so a name failing
+# only proves that, and still leaves TCP egress open when the Mac forwards.
+code=$(env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy \
+    -u ALL_PROXY -u all_proxy \
+    curl -sS -m 5 -o /dev/null -w '%{http_code}' http://1.1.1.1/ || true)
+if [ "$code" != 000 ]; then
+  echo "FAIL: the container reached the internet directly (HTTP $code)"; s=1
 else echo "direct connection failed"; fi
 exit $s
 EOF
