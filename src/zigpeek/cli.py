@@ -32,7 +32,12 @@ from zigpeek.fetch import (
     prefetch as fetch_prefetch,
 )
 from zigpeek.info import collect_runtime_info, render_info
-from zigpeek.libdir import pack_lib_dir, resolve_lib_dir, resolve_std_dir
+from zigpeek.libdir import (
+    local_langref,
+    pack_lib_dir,
+    resolve_lib_dir,
+    resolve_std_dir,
+)
 from zigpeek.stdlib import render_get_item, render_search
 from zigpeek.version import resolve_version
 from zigpeek.wasm import WasmStd
@@ -106,9 +111,14 @@ def _load_std(
 
 @functools.lru_cache(maxsize=4)
 def _load_builtins(
-    version: str, refresh: bool, cache_dir: str | None
+    version: str, refresh: bool, cache_dir: str | None, lib_dir: str | None
 ) -> tuple[list[builtins_mod.BuiltinFunction], str]:
-    html = fetch_langref_html(version, refresh=refresh, cache_dir=cache_dir)
+    local = local_langref(lib_dir) if lib_dir else None
+    html = (
+        local.read_text(encoding="utf-8")
+        if local
+        else fetch_langref_html(version, refresh=refresh, cache_dir=cache_dir)
+    )
     base = langref_url(version)
     return builtins_mod.parse_builtin_functions_html(html, link_base_url=base), base
 
@@ -142,7 +152,9 @@ def _cmd_get(args: argparse.Namespace) -> int:
 @_wrap_errors
 def _cmd_builtins_list(args: argparse.Namespace) -> int:
     version = resolve_version(args.version)
-    fns, base = _load_builtins(version, args.refresh, args.cache_dir)
+    fns, base = _load_builtins(
+        version, args.refresh, args.cache_dir, _resolved_lib_dir(args)
+    )
     lines = "\n".join(f"- {fn.signature}" for fn in fns)
     sys.stdout.write(
         f"Available {len(fns)} builtin functions "
@@ -156,7 +168,9 @@ def _cmd_builtins_get(args: argparse.Namespace) -> int:
     if not args.query:
         return _err("query cannot be empty", 1)
     version = resolve_version(args.version)
-    fns, _ = _load_builtins(version, args.refresh, args.cache_dir)
+    fns, _ = _load_builtins(
+        version, args.refresh, args.cache_dir, _resolved_lib_dir(args)
+    )
     ranked = builtins_mod.rank_builtin_functions(fns, args.query)
     if not ranked:
         return _err(

@@ -239,6 +239,26 @@ def test_get_with_lib_dir_needs_no_network():
     assert "The meaning of life." in proc.stdout
 
 
+def test_builtins_with_lib_dir_reads_local_langref(tmp_path):
+    install = tmp_path / "zig"
+    (install / "lib" / "std").mkdir(parents=True)
+    (install / "lib" / "std" / "std.zig").write_text("")
+    (install / "doc").mkdir()
+    (install / "doc" / "langref.html").write_text(
+        (SKILL_ROOT / "tests" / "fixtures" / "tiny-langref.html").read_text()
+    )
+    proc = run_cli(
+        "builtins", "get", "atomicLoad", "--lib-dir", str(install / "lib"),
+        env={
+            "ZIGPEEK_CACHE_DIR": str(tmp_path / "cache"),
+            "HTTPS_PROXY": "http://127.0.0.1:9",
+        },
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "@atomicLoad" in proc.stdout
+    assert not (tmp_path / "cache").exists()
+
+
 def test_lib_dir_missing_exits_2(tmp_path):
     proc = run_cli("search", "Answer", "--lib-dir", str(tmp_path / "nope"))
     assert proc.returncode == 2
