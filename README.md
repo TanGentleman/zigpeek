@@ -11,6 +11,14 @@ zigpeek search ArrayList
 zigpeek get std.Io.Dir.openFile
 ```
 
+Browse the whole stdlib in your terminal:
+
+```sh
+uv tool install 'zigpeek[tui]'
+zigpeek map            # cards for every top-level namespace; / filters, Enter opens
+zigpeek map std.Io.Dir # jump straight in
+```
+
 Zig master:
 
 ```sh

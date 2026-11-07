@@ -17,6 +17,8 @@ dependencies = [
 # so first run needs no network. Pin is exact: the data wheel is built and
 # published in lockstep with this one.
 offline = ["zigpeek-offline==0.5.1"]
+# `zigpeek map`: browse the stdlib namespace tree in the terminal.
+tui = ["textual~=8.2"]
 
 [project.urls]
 Homepage = "https://github.com/TanGentleman/zigpeek"
@@ -29,6 +31,7 @@ zigpeek = "zigpeek.cli:main"
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
+    "textual~=8.2",
     "zigpeek-offline",
 ]
 
