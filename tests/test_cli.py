@@ -259,6 +259,16 @@ def test_builtins_with_lib_dir_reads_local_langref(tmp_path):
     assert not (tmp_path / "cache").exists()
 
 
+def test_get_error_set_decl_is_not_a_failure(tmp_path):
+    # `# Error Set` is a heading. Only `# Error\n\n` means "not found".
+    std_dir = tmp_path / "lib" / "std"
+    std_dir.mkdir(parents=True)
+    (std_dir / "std.zig").write_text("pub const Oops = error{Bad};\n")
+    proc = run_cli("get", "std.Oops", "--lib-dir", str(tmp_path / "lib"))
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout.startswith("# Error Set")
+
+
 def test_lib_dir_missing_exits_2(tmp_path):
     proc = run_cli("search", "Answer", "--lib-dir", str(tmp_path / "nope"))
     assert proc.returncode == 2

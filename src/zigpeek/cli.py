@@ -143,7 +143,7 @@ def _cmd_get(args: argparse.Namespace) -> int:
     version = resolve_version(args.version)
     std = _load_std(version, args.refresh, args.cache_dir, _resolved_lib_dir(args))
     md = render_get_item(std, args.fqn, get_source_file=args.source_file)
-    if md.startswith("# Error"):
+    if md.startswith("# Error\n\n"):
         print(md, file=sys.stderr)
         return 1
     sys.stdout.write(md)
