@@ -6,6 +6,8 @@
 | `src/zigpeek/info.py`             | `zigpeek info` when/how blurb + resolved binaries/Zig |
 | `src/zigpeek/stdlib.py`           | markdown rendering against the autodoc WASM         |
 | `src/zigpeek/wasm.py`             | wasmtime driver + typed wrapper around WASM exports |
+| `src/zigpeek/tree.py`             | walk every decl once; cache for `map`               |
+| `src/zigpeek/tui.py`              | `zigpeek map` Textual TUI (`[tui]` extra)           |
 | `src/zigpeek/builtins.py`         | langref HTML parser + ranking                       |
 | `src/zigpeek/fetch.py`            | sources.tar / langref download + XDG cache          |
 | `src/zigpeek/libdir.py`           | pack local Zig `lib/` into autodoc `sources.tar`    |
@@ -27,6 +29,14 @@ fetch on demand.
 The data wheel is a uv workspace member built by a custom hatch hook
 (`packages/zigpeek-offline/hatch_build.py`) that downloads the files at
 wheel-build time — no manual prefetch step.
+
+## `zigpeek map`
+
+The first run per Zig version (and source: local `lib/` or ziglang.org)
+walks every public decl through the WASM, a few seconds, and caches
+`<cache>/<version>/map/tree-<source>.json`. Later runs read the cache.
+`--refresh` re-walks. The TUI is optional: Textual ships only with the
+`[tui]` extra, and `cli.py` imports it lazily.
 
 ## Releasing
 

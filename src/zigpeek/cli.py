@@ -1,4 +1,5 @@
-"""argparse entrypoint for `zigpeek`. Five stdlib/builtin lookup subcommands
+"""argparse entrypoint for `zigpeek`. Five stdlib/builtin lookup subcommands,
+a `map` TUI over the stdlib namespace tree (needs the `[tui]` extra),
 plus `info` (short when/how + resolved binaries/Zig version), a `prefetch`
 helper for offline-first workflows, and a `batch` runner that amortizes
 Python+wasmtime startup across many lookups.
@@ -25,6 +26,7 @@ import httpx
 import wasmtime
 
 from zigpeek import builtins as builtins_mod
+from zigpeek import tree as tree_mod
 from zigpeek.fetch import (
     fetch_langref_html,
     fetch_sources_tar,
@@ -37,7 +39,7 @@ from zigpeek.stdlib import render_get_item, render_search
 from zigpeek.version import resolve_version
 from zigpeek.wasm import WasmStd
 
-_BATCH_DISALLOWED = frozenset({"batch", "prefetch"})
+_BATCH_DISALLOWED = frozenset({"batch", "map", "prefetch"})
 
 
 def _err(msg: str, code: int) -> int:
@@ -276,6 +278,38 @@ def _cmd_batch(args: argparse.Namespace) -> int:
     return worst
 
 
+@_wrap_errors
+def _cmd_map(args: argparse.Namespace) -> int:
+    try:
+        from zigpeek.tui import MapApp
+    except ImportError:
+        return _err(
+            "`zigpeek map` needs the TUI extra: uv tool install 'zigpeek[tui]'", 1
+        )
+    version = resolve_version(args.version)
+    lib_dir = _resolved_lib_dir(args)
+
+    def load_std() -> WasmStd:
+        return _load_std(version, args.refresh, args.cache_dir, lib_dir)
+
+    rows = tree_mod.load_or_walk(
+        version,
+        args.cache_dir,
+        lib_dir,
+        load_std,
+        refresh=args.refresh,
+        on_walk=lambda: print(
+            f"Indexing the Zig {version} stdlib (once per version)…",
+            file=sys.stderr,
+            flush=True,
+        ),
+    )
+    if args.fqn and args.fqn not in {r["fqn"] for r in rows}:
+        return _err(f'"{args.fqn}" is not a declaration in Zig {version} std', 1)
+    MapApp(rows, version=version, load_std=load_std, start=args.fqn).run()
+    return 0
+
+
 def _add_source_flags(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--version",
@@ -359,6 +393,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_source_flags(p_info)
     p_info.set_defaults(func=_cmd_info)
+
+    p_map = sub.add_parser(
+        "map",
+        help="Browse the stdlib namespace tree in a TUI (needs zigpeek[tui])",
+    )
+    p_map.add_argument(
+        "fqn",
+        nargs="?",
+        default=None,
+        help="Open straight at this namespace or decl, e.g. std.Io.Dir",
+    )
+    _add_common(p_map)
+    p_map.set_defaults(func=_cmd_map)
 
     p_batch = sub.add_parser(
         "batch",
