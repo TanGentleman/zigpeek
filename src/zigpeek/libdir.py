@@ -128,3 +128,13 @@ def pack_lib_dir(lib_dir: Path | str) -> bytes:
             info.mode = 0o644
             tar.addfile(info, io.BytesIO(data))
     return buf.getvalue()
+
+
+def local_langref(lib_dir: Path | str) -> Path | None:
+    """``doc/langref.html`` shipped next to the compiler's ``lib/``, if any."""
+    std_dir = resolve_std_dir(Path(lib_dir))
+    for root in (std_dir.parent.parent, std_dir.parent):
+        path = root / "doc" / "langref.html"
+        if path.is_file():
+            return path
+    return None
